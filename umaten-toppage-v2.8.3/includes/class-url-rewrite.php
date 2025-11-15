@@ -36,9 +36,10 @@ class Umaten_Toppage_URL_Rewrite {
      * コンストラクタ
      */
     private function __construct() {
-        // 【v2.9.4】他プラグインとの衝突を完全に回避
-        // 優先度1で早期に処理し、WordPress標準のクエリを優先
-        add_action('template_redirect', array($this, 'handle_plugin_conflicts'), 1);
+        // 【v2.9.6】他プラグインとの衝突を完全に回避
+        // 優先度15で処理し、他プラグインがquery varsを設定した後にチェック
+        // restaurant-review-category-tagsなどのプラグインがrrct_activeなどを設定する時間を確保
+        add_action('template_redirect', array($this, 'handle_plugin_conflicts'), 15);
 
         // 【v2.9.1】404時のみカスタム処理を実行（優先度を999に設定）
         add_action('template_redirect', array($this, 'handle_404_redirect'), 999);
@@ -59,6 +60,8 @@ class Umaten_Toppage_URL_Rewrite {
      * @since 2.9.2
      * @since 2.9.3 条件を修正：WordPress標準のクエリ変数が設定されている場合のみクリア
      * @since 2.9.4 restaurant-review-category-tagsプラグインとの衝突も回避
+     * @since 2.9.5 rrct_activeフラグのチェックを追加
+     * @since 2.9.6 優先度を15に変更し、他プラグインがquery varsを設定する時間を確保
      */
     public function handle_plugin_conflicts() {
         global $wp_query;
