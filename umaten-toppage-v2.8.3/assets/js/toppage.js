@@ -335,7 +335,7 @@
             $grid.empty();
 
             // デバッグログ
-            console.log('[v2.8.7] renderTags called - Parent:', self.currentParentSlug, ', Child:', self.currentChildSlug, ', Tags:', tags.length);
+            console.log('[v2.9.0] renderTags called - Parent:', self.currentParentSlug, ', Child:', self.currentChildSlug, ', Tags:', tags.length);
 
             if (tags.length === 0) {
                 $grid.html(`
@@ -348,9 +348,9 @@
                 return;
             }
 
-            // 【v2.8.7修正】currentParentSlugとcurrentChildSlugの検証を先に実行
+            // 【v2.9.0】currentParentSlugとcurrentChildSlugの検証
             if (!self.currentParentSlug || !self.currentChildSlug) {
-                console.error('[v2.8.7] ERROR: currentParentSlug or currentChildSlug is empty!',
+                console.error('[v2.9.0] ERROR: currentParentSlug or currentChildSlug is empty!',
                     'Parent:', self.currentParentSlug, 'Child:', self.currentChildSlug);
                 $grid.html(`
                     <div class="meshimap-coming-soon">
@@ -362,60 +362,11 @@
                 return;
             }
 
-            // 【v2.8.7修正】検証後にallGenresUrlを生成（バグ修正）
-            const allGenresUrl = umatenToppage.siteUrl + '/' + self.currentParentSlug + '/' + self.currentChildSlug + '/';
-            console.log('[v2.8.7] All genres URL generated:', allGenresUrl);
-
-            // 【v2.8.7修正】URLが正しく生成されたか再確認（プロトコル部分を除外してチェック）
-            const urlWithoutProtocol = allGenresUrl.replace(/^https?:\/\//, '');
-            const hasDoubleSlash = urlWithoutProtocol.includes('//');
-
-            if (!allGenresUrl || allGenresUrl === umatenToppage.siteUrl + '///' || hasDoubleSlash) {
-                console.error('[v2.8.7] ERROR: Invalid allGenresUrl generated:', allGenresUrl, 'hasDoubleSlash:', hasDoubleSlash);
-                $grid.html(`
-                    <div class="meshimap-coming-soon">
-                        <div class="meshimap-coming-soon-icon">&#9888;</div>
-                        <h3 class="meshimap-coming-soon-title">URLエラー</h3>
-                        <p class="meshimap-coming-soon-text">URLの生成に失敗しました。もう一度お試しください。</p>
-                    </div>
-                `);
-                return;
-            }
-
-            console.log('[v2.8.7] URL validation passed:', allGenresUrl);
-
-            // 「すべてのジャンル」ボタンを最初に追加
-            const $allGenresItem = $('<a>')
-                .attr('href', allGenresUrl)
-                .addClass('meshimap-tag-item meshimap-tag-item-all')
-                .html('🍴 すべてのジャンル')
-                .attr('data-tag-slug', '')
-                .attr('data-parent', self.currentParentSlug)
-                .attr('data-child', self.currentChildSlug)
-                .attr('data-full-url', allGenresUrl);
-
-            $allGenresItem.on('click', function(e) {
-                const targetUrl = $(this).attr('href');
-                console.log('[v2.8.7] すべてのジャンルクリック - 遷移先URL:', targetUrl);
-
-                // URLが正しいか最終チェック（プロトコル部分を除外してチェック）
-                const urlCheck = targetUrl.replace(/^https?:\/\//, '');
-                if (!targetUrl || targetUrl === '/' || urlCheck.includes('//')) {
-                    console.error('[v2.8.7] Invalid URL detected, preventing navigation');
-                    e.preventDefault();
-                    alert('URLが正しく生成されませんでした。もう一度お試しください。');
-                    return false;
-                }
-                // URLが正しい場合は、デフォルトのリンク動作を許可
-            });
-
-            $grid.append($allGenresItem);
-
             // 各ジャンルを追加
             $.each(tags, function(index, tag) {
-                // 【v2.8.0修正】実際のURLを生成してhref属性に設定
+                // 【v2.9.0】実際のURLを生成してhref属性に設定
                 const tagUrl = umatenToppage.siteUrl + '/' + self.currentParentSlug + '/' + self.currentChildSlug + '/' + tag.slug + '/';
-                console.log('[v2.8.0] Tag URL generated:', tag.name, '->', tagUrl);
+                console.log('[v2.9.0] Tag URL generated:', tag.name, '->', tagUrl);
 
                 const $tagItem = $('<a>')
                     .attr('href', tagUrl)
@@ -425,15 +376,14 @@
                     .attr('data-full-url', tagUrl);
 
                 $tagItem.on('click', function(e) {
-                    console.log('[v2.8.0] タグクリック:', tag.name, ', URL:', tagUrl);
+                    console.log('[v2.9.0] タグクリック:', tag.name, ', URL:', tagUrl);
                     // デフォルトのリンク動作を許可（href属性で遷移）
-                    // e.preventDefault()は削除
                 });
 
                 $grid.append($tagItem);
             });
 
-            console.log('[v2.8.0] タグを', tags.length, '件レンダリングしました（すべてのジャンルを含む）');
+            console.log('[v2.9.0] タグを', tags.length, '件レンダリングしました');
         },
 
         /**
