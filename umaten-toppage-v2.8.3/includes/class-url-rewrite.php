@@ -36,126 +36,9 @@ class Umaten_Toppage_URL_Rewrite {
      * コンストラクタ
      */
     private function __construct() {
-        // 【v2.8.8】カスタムリライトルールとクエリ変数を登録
-        add_action('init', array($this, 'add_rewrite_rules'));
-        add_filter('query_vars', array($this, 'add_query_vars'));
-
-        // 【v2.8.8】カスタムリクエスト処理（優先度1で早期実行）
-        add_action('template_redirect', array($this, 'handle_custom_request'), 1);
-
-        // 404時のカスタム処理を実行（優先度を999に設定、フォールバック用）
+        // 【v2.9.1】カスタムリライトルールを削除（投稿ページが表示されない問題の修正）
+        // 404時のみカスタム処理を実行（優先度を999に設定）
         add_action('template_redirect', array($this, 'handle_404_redirect'), 999);
-    }
-
-    /**
-     * 【v2.8.8新機能】カスタムリライトルールを追加
-     */
-    public function add_rewrite_rules() {
-        // /親/子/ パターン（すべてのジャンルページ）
-        add_rewrite_rule(
-            '^([^/]+)/([^/]+)/?$',
-            'index.php?umaten_parent=$matches[1]&umaten_child=$matches[2]',
-            'top'
-        );
-
-        // /親/子/タグ/ パターン（特定ジャンルページ）
-        add_rewrite_rule(
-            '^([^/]+)/([^/]+)/([^/]+)/?$',
-            'index.php?umaten_parent=$matches[1]&umaten_child=$matches[2]&umaten_tag=$matches[3]',
-            'top'
-        );
-    }
-
-    /**
-     * 【v2.8.8新機能】カスタムクエリ変数を追加
-     */
-    public function add_query_vars($vars) {
-        $vars[] = 'umaten_parent';
-        $vars[] = 'umaten_child';
-        $vars[] = 'umaten_tag';
-        return $vars;
-    }
-
-    /**
-     * 【v2.8.8新機能】カスタムリクエストを処理
-     */
-    public function handle_custom_request() {
-        // フロントエンドのページリクエストのみ処理
-        if (!$this->is_frontend_request()) {
-            return;
-        }
-
-        // カスタムクエリ変数をチェック
-        $parent_slug = get_query_var('umaten_parent');
-        $child_slug = get_query_var('umaten_child');
-        $tag_slug = get_query_var('umaten_tag');
-
-        // カスタムクエリ変数が設定されていない場合は何もしない
-        if (empty($parent_slug) && empty($child_slug)) {
-            return;
-        }
-
-        // デバッグログ
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log("Umaten Toppage v2.8.8: Custom request detected - Parent: '{$parent_slug}', Child: '{$child_slug}', Tag: '{$tag_slug}'");
-        }
-
-        // タームを取得
-        $parent_term = !empty($parent_slug) ? get_term_by('slug', $parent_slug, 'category') : null;
-        $child_term = !empty($child_slug) ? get_term_by('slug', $child_slug, 'category') : null;
-        $tag_term = !empty($tag_slug) ? get_term_by('slug', $tag_slug, 'post_tag') : null;
-
-        // デバッグログ
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            $parent_name = $parent_term ? $parent_term->name : 'none';
-            $child_name = $child_term ? $child_term->name : 'none';
-            $tag_name = $tag_term ? $tag_term->name : 'none';
-            error_log("Umaten Toppage v2.8.8: Terms found - Parent: {$parent_name}, Child: {$child_name}, Tag: {$tag_name}");
-        }
-
-        // /親/子/ パターン（すべてのジャンル）
-        if (!empty($parent_slug) && !empty($child_slug) && empty($tag_slug)) {
-            // 子カテゴリが存在する場合はアーカイブページとして処理
-            if ($child_term) {
-                if (defined('WP_DEBUG') && WP_DEBUG) {
-                    error_log("Umaten Toppage v2.8.8: Displaying all genres for {$child_term->name}");
-                }
-                $this->setup_archive_query($parent_term, $child_term, null);
-                return;
-            }
-
-            // カテゴリが存在しない場合は投稿として検索
-            $post = $this->find_post_by_slug($child_slug);
-            if ($post) {
-                if (defined('WP_DEBUG') && WP_DEBUG) {
-                    error_log("Umaten Toppage v2.8.8: Found post '{$post->post_title}'");
-                }
-                $this->setup_single_post_query($post);
-                return;
-            }
-        }
-
-        // /親/子/タグ/ パターン（特定ジャンル）
-        if (!empty($parent_slug) && !empty($child_slug) && !empty($tag_slug)) {
-            // タグが存在する場合はアーカイブページとして処理
-            if ($tag_term) {
-                if (defined('WP_DEBUG') && WP_DEBUG) {
-                    error_log("Umaten Toppage v2.8.8: Displaying tag archive for {$tag_term->name}");
-                }
-                $this->setup_archive_query($parent_term, $child_term, $tag_term);
-                return;
-            }
-
-            // タグが存在しない場合は投稿として検索
-            $post = $this->find_post_by_slug($tag_slug);
-            if ($post) {
-                if (defined('WP_DEBUG') && WP_DEBUG) {
-                    error_log("Umaten Toppage v2.8.8: Found post '{$post->post_title}'");
-                }
-                $this->setup_single_post_query($post);
-                return;
-            }
-        }
     }
 
     /**
@@ -546,9 +429,7 @@ class Umaten_Toppage_URL_Rewrite {
      * リライトルールをフラッシュ（プラグイン有効化時）
      */
     public static function flush_rewrite_rules() {
-        // 【v2.8.8】カスタムリライトルールを登録してからフラッシュ
-        $instance = self::get_instance();
-        $instance->add_rewrite_rules();
+        // 【v2.9.1】通常のフラッシュのみ実行（カスタムリライトルールは削除済み）
         flush_rewrite_rules();
     }
 }
