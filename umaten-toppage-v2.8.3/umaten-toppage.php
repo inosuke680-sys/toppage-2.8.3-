@@ -1,0 +1,177 @@
+<?php
+/**
+ * Plugin Name: Umaten トップページ
+ * Plugin URI: https://umaten.jp
+ * Description: 動的なカテゴリ・タグ表示を備えたトップページ用プラグイン。全エリア対応の3ステップナビゲーション（親→子カテゴリ→ジャンル）。SEO最適化・URLリライト完全修正（タグ・投稿判定改善）・ヒーロー画像メタデータ保存（SWELLテーマ完全対応）。検索結果ページ対応（モダンUI）。独自アクセスカウント機能搭載。投稿とタグの完全な区別。デバッグログ強化・エラーハンドリング改善。v2.8.5：人気ジャンル削除・サイト説明追加、月間アクセス手動入力対応。
+ * Version: 2.8.5
+ * Author: Umaten
+ * Author URI: https://umaten.jp
+ * License: GPL v2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain: umaten-toppage
+ */
+
+// 直接アクセスを防止
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+// プラグインの定数定義
+define('UMATEN_TOPPAGE_VERSION', '2.8.5');
+define('UMATEN_TOPPAGE_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('UMATEN_TOPPAGE_PLUGIN_URL', plugin_dir_url(__FILE__));
+
+/**
+ * メインプラグインクラス
+ */
+class Umaten_Toppage_Plugin {
+
+    /**
+     * シングルトンインスタンス
+     */
+    private static $instance = null;
+
+    /**
+     * シングルトンインスタンスを取得
+     */
+    public static function get_instance() {
+        if (null === self::$instance) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+    /**
+     * コンストラクタ
+     */
+    private function __construct() {
+        $this->load_dependencies();
+        $this->init_hooks();
+    }
+
+    /**
+     * 依存ファイルの読み込み
+     */
+    private function load_dependencies() {
+        require_once UMATEN_TOPPAGE_PLUGIN_DIR . 'includes/class-admin-settings.php';
+        require_once UMATEN_TOPPAGE_PLUGIN_DIR . 'includes/class-ajax-handler.php';
+        require_once UMATEN_TOPPAGE_PLUGIN_DIR . 'includes/class-shortcode.php';
+        require_once UMATEN_TOPPAGE_PLUGIN_DIR . 'includes/class-view-counter.php';
+        require_once UMATEN_TOPPAGE_PLUGIN_DIR . 'includes/class-search-results.php';
+        require_once UMATEN_TOPPAGE_PLUGIN_DIR . 'includes/class-url-rewrite.php';
+        require_once UMATEN_TOPPAGE_PLUGIN_DIR . 'includes/class-seo-meta.php';
+        require_once UMATEN_TOPPAGE_PLUGIN_DIR . 'includes/class-hero-image.php';
+    }
+
+    /**
+     * フックの初期化
+     */
+    private function init_hooks() {
+        // プラグイン有効化時のフック
+        register_activation_hook(__FILE__, array($this, 'activate'));
+
+        // プラグイン無効化時のフック
+        register_deactivation_hook(__FILE__, array($this, 'deactivate'));
+
+        // 初期化
+        add_action('plugins_loaded', array($this, 'init'));
+    }
+
+    /**
+     * プラグイン初期化
+     */
+    public function init() {
+        // 管理画面の初期化
+        if (is_admin()) {
+            Umaten_Toppage_Admin_Settings::get_instance();
+        }
+
+        // AJAX処理の初期化
+        Umaten_Toppage_Ajax_Handler::get_instance();
+
+        // ショートコードの初期化
+        Umaten_Toppage_Shortcode::get_instance();
+
+        // 検索結果ページの初期化
+        Umaten_Toppage_Search_Results::get_instance();
+
+        // ビューカウンターの初期化
+        Umaten_Toppage_View_Counter::get_instance();
+
+        // URLリライトの初期化
+        Umaten_Toppage_URL_Rewrite::get_instance();
+
+        // SEOメタタグの初期化
+        Umaten_Toppage_SEO_Meta::get_instance();
+
+        // ヒーロー画像メタデータ保存の初期化
+        Umaten_Toppage_Hero_Image::get_instance();
+    }
+
+    /**
+     * プラグイン有効化時の処理
+     */
+    public function activate() {
+        // デフォルト設定の作成
+        $default_settings = array(
+            'hokkaido' => array(
+                'status' => 'published',
+                'label' => '北海道'
+            ),
+            'tohoku' => array(
+                'status' => 'coming_soon',
+                'label' => '東北'
+            ),
+            'kanto' => array(
+                'status' => 'coming_soon',
+                'label' => '関東'
+            ),
+            'chubu' => array(
+                'status' => 'coming_soon',
+                'label' => '中部'
+            ),
+            'kansai' => array(
+                'status' => 'coming_soon',
+                'label' => '関西'
+            ),
+            'chugoku' => array(
+                'status' => 'coming_soon',
+                'label' => '中国'
+            ),
+            'shikoku' => array(
+                'status' => 'coming_soon',
+                'label' => '四国'
+            ),
+            'kyushu-okinawa' => array(
+                'status' => 'coming_soon',
+                'label' => '九州・沖縄'
+            )
+        );
+
+        // 既存の設定がない場合のみデフォルト設定を保存
+        if (!get_option('umaten_toppage_area_settings')) {
+            update_option('umaten_toppage_area_settings', $default_settings);
+        }
+
+        // リライトルールをフラッシュ
+        Umaten_Toppage_URL_Rewrite::flush_rewrite_rules();
+    }
+
+    /**
+     * プラグイン無効化時の処理
+     */
+    public function deactivate() {
+        // リライトルールをクリア
+        flush_rewrite_rules();
+    }
+}
+
+/**
+ * プラグインのインスタンスを起動
+ */
+function umaten_toppage() {
+    return Umaten_Toppage_Plugin::get_instance();
+}
+
+// プラグイン起動
+umaten_toppage();
