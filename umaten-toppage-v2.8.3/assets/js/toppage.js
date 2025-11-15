@@ -335,7 +335,7 @@
             $grid.empty();
 
             // デバッグログ
-            console.log('[v2.8.6] renderTags called - Parent:', self.currentParentSlug, ', Child:', self.currentChildSlug, ', Tags:', tags.length);
+            console.log('[v2.8.7] renderTags called - Parent:', self.currentParentSlug, ', Child:', self.currentChildSlug, ', Tags:', tags.length);
 
             if (tags.length === 0) {
                 $grid.html(`
@@ -348,9 +348,9 @@
                 return;
             }
 
-            // 【v2.8.6修正】currentParentSlugとcurrentChildSlugの検証を先に実行
+            // 【v2.8.7修正】currentParentSlugとcurrentChildSlugの検証を先に実行
             if (!self.currentParentSlug || !self.currentChildSlug) {
-                console.error('[v2.8.6] ERROR: currentParentSlug or currentChildSlug is empty!',
+                console.error('[v2.8.7] ERROR: currentParentSlug or currentChildSlug is empty!',
                     'Parent:', self.currentParentSlug, 'Child:', self.currentChildSlug);
                 $grid.html(`
                     <div class="meshimap-coming-soon">
@@ -362,13 +362,16 @@
                 return;
             }
 
-            // 【v2.8.6修正】検証後にallGenresUrlを生成（バグ修正）
+            // 【v2.8.7修正】検証後にallGenresUrlを生成（バグ修正）
             const allGenresUrl = umatenToppage.siteUrl + '/' + self.currentParentSlug + '/' + self.currentChildSlug + '/';
-            console.log('[v2.8.6] All genres URL generated:', allGenresUrl);
+            console.log('[v2.8.7] All genres URL generated:', allGenresUrl);
 
-            // 【v2.8.6修正】URLが正しく生成されたか再確認
-            if (!allGenresUrl || allGenresUrl === umatenToppage.siteUrl + '///' || allGenresUrl.includes('//')) {
-                console.error('[v2.8.6] ERROR: Invalid allGenresUrl generated:', allGenresUrl);
+            // 【v2.8.7修正】URLが正しく生成されたか再確認（プロトコル部分を除外してチェック）
+            const urlWithoutProtocol = allGenresUrl.replace(/^https?:\/\//, '');
+            const hasDoubleSlash = urlWithoutProtocol.includes('//');
+
+            if (!allGenresUrl || allGenresUrl === umatenToppage.siteUrl + '///' || hasDoubleSlash) {
+                console.error('[v2.8.7] ERROR: Invalid allGenresUrl generated:', allGenresUrl, 'hasDoubleSlash:', hasDoubleSlash);
                 $grid.html(`
                     <div class="meshimap-coming-soon">
                         <div class="meshimap-coming-soon-icon">&#9888;</div>
@@ -378,6 +381,8 @@
                 `);
                 return;
             }
+
+            console.log('[v2.8.7] URL validation passed:', allGenresUrl);
 
             // 「すべてのジャンル」ボタンを最初に追加
             const $allGenresItem = $('<a>')
@@ -391,11 +396,12 @@
 
             $allGenresItem.on('click', function(e) {
                 const targetUrl = $(this).attr('href');
-                console.log('[v2.8.6] すべてのジャンルクリック - 遷移先URL:', targetUrl);
+                console.log('[v2.8.7] すべてのジャンルクリック - 遷移先URL:', targetUrl);
 
-                // URLが正しいか最終チェック
-                if (!targetUrl || targetUrl === '/' || targetUrl.includes('//')) {
-                    console.error('[v2.8.6] Invalid URL detected, preventing navigation');
+                // URLが正しいか最終チェック（プロトコル部分を除外してチェック）
+                const urlCheck = targetUrl.replace(/^https?:\/\//, '');
+                if (!targetUrl || targetUrl === '/' || urlCheck.includes('//')) {
+                    console.error('[v2.8.7] Invalid URL detected, preventing navigation');
                     e.preventDefault();
                     alert('URLが正しく生成されませんでした。もう一度お試しください。');
                     return false;

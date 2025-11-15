@@ -488,7 +488,7 @@ aside {
     font-weight: bold;
 }
 
-/* サイト説明セクション - プレミアムデザイン */
+/* サイト説明セクション - プレミアムデザイン（80万円クオリティ） */
 .meshimap-about-content {
     max-width: 1200px;
     margin: 0 auto;
@@ -496,18 +496,50 @@ aside {
 
 .meshimap-about-description {
     background:
-        linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,249,250,0.95) 100%);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    padding: 60px;
-    border-radius: 32px;
+        radial-gradient(circle at top right, rgba(102, 126, 234, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at bottom left, rgba(237, 66, 100, 0.08) 0%, transparent 50%),
+        linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,249,250,0.98) 100%);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    padding: 70px;
+    border-radius: 40px;
     box-shadow:
-        0 20px 60px rgba(0,0,0,0.08),
-        0 0 0 1px rgba(102, 126, 234, 0.1),
-        0 10px 30px rgba(102, 126, 234, 0.05) inset;
-    border: 2px solid rgba(255,255,255,0.8);
+        0 30px 90px rgba(102, 126, 234, 0.12),
+        0 15px 45px rgba(237, 66, 100, 0.08),
+        0 0 0 1px rgba(255, 255, 255, 0.8),
+        0 0 0 2px rgba(102, 126, 234, 0.15),
+        0 20px 60px rgba(102, 126, 234, 0.08) inset,
+        0 -5px 20px rgba(255, 255, 255, 0.5) inset;
+    border: 3px solid;
+    border-image: linear-gradient(135deg,
+        rgba(102, 126, 234, 0.4),
+        rgba(237, 66, 100, 0.3),
+        rgba(255, 142, 83, 0.4)
+    ) 1;
     position: relative;
     overflow: hidden;
+    animation: aboutFloat 12s ease-in-out infinite;
+}
+
+@keyframes aboutFloat {
+    0%, 100% {
+        transform: translateY(0) scale(1);
+        box-shadow:
+            0 30px 90px rgba(102, 126, 234, 0.12),
+            0 15px 45px rgba(237, 66, 100, 0.08),
+            0 0 0 1px rgba(255, 255, 255, 0.8),
+            0 0 0 2px rgba(102, 126, 234, 0.15),
+            0 20px 60px rgba(102, 126, 234, 0.08) inset;
+    }
+    50% {
+        transform: translateY(-8px) scale(1.002);
+        box-shadow:
+            0 40px 100px rgba(102, 126, 234, 0.15),
+            0 20px 50px rgba(237, 66, 100, 0.1),
+            0 0 0 1px rgba(255, 255, 255, 0.9),
+            0 0 0 2px rgba(102, 126, 234, 0.2),
+            0 25px 70px rgba(102, 126, 234, 0.1) inset;
+    }
 }
 
 .meshimap-about-description::before {
@@ -516,33 +548,85 @@ aside {
     top: 0;
     left: 0;
     right: 0;
-    height: 4px;
+    height: 6px;
     background: linear-gradient(90deg,
         #667eea 0%,
-        #764ba2 25%,
-        #ed4264 50%,
-        #ff6b6b 75%,
-        #ff8e53 100%
+        #764ba2 20%,
+        #ed4264 40%,
+        #ff6b6b 60%,
+        #ff8e53 80%,
+        #667eea 100%
     );
+    background-size: 200% 100%;
+    animation: gradientSlide 8s linear infinite;
+    border-radius: 40px 40px 0 0;
+}
+
+@keyframes gradientSlide {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 200% 0%; }
+}
+
+.meshimap-about-description::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(102, 126, 234, 0.06) 0%, transparent 70%);
+    transform: translate(-50%, -50%);
+    animation: pulse 8s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.5;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.1);
+        opacity: 0.8;
+    }
 }
 
 .meshimap-about-description > p {
-    font-size: 18px;
-    line-height: 1.9;
+    font-size: 19px;
+    line-height: 2;
     color: #2c3e50;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
     font-weight: 400;
     position: relative;
     z-index: 1;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+    letter-spacing: 0.02em;
 }
 
 .meshimap-about-description > p:first-of-type {
-    font-size: 22px;
-    font-weight: 600;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    font-size: 26px;
+    font-weight: 700;
+    background: linear-gradient(135deg,
+        #667eea 0%,
+        #764ba2 30%,
+        #ed4264 60%,
+        #ff6b6b 100%
+    );
+    background-size: 200% auto;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    animation: textGradientShift 6s ease-in-out infinite;
+    letter-spacing: -0.02em;
+    line-height: 1.6;
+    margin-bottom: 28px;
+    filter: drop-shadow(0 2px 4px rgba(102, 126, 234, 0.15));
+}
+
+@keyframes textGradientShift {
+    0%, 100% { background-position: 0% center; }
+    50% { background-position: 100% center; }
 }
 
 .meshimap-about-features {
@@ -557,20 +641,28 @@ aside {
 .meshimap-feature-item {
     display: flex;
     gap: 24px;
-    padding: 36px 30px;
+    padding: 42px 36px;
     background:
+        radial-gradient(circle at top left, rgba(102, 126, 234, 0.06) 0%, transparent 60%),
         linear-gradient(135deg,
-            rgba(102, 126, 234, 0.03) 0%,
-            rgba(118, 75, 162, 0.05) 100%
+            rgba(102, 126, 234, 0.05) 0%,
+            rgba(118, 75, 162, 0.08) 50%,
+            rgba(237, 66, 100, 0.05) 100%
         );
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-radius: 20px;
-    border: 2px solid rgba(102, 126, 234, 0.1);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    border-radius: 28px;
+    border: 2px solid;
+    border-image: linear-gradient(135deg,
+        rgba(102, 126, 234, 0.2),
+        rgba(237, 66, 100, 0.15)
+    ) 1;
     box-shadow:
-        0 8px 24px rgba(0,0,0,0.04),
-        0 0 0 1px rgba(255,255,255,0.5) inset;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        0 15px 40px rgba(102, 126, 234, 0.08),
+        0 8px 20px rgba(0,0,0,0.04),
+        0 0 0 1px rgba(255,255,255,0.6) inset,
+        0 10px 25px rgba(102, 126, 234, 0.04) inset;
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
     position: relative;
     overflow: hidden;
 }
@@ -580,12 +672,31 @@ aside {
     position: absolute;
     top: 0;
     left: 0;
-    width: 4px;
+    width: 6px;
     height: 100%;
-    background: linear-gradient(180deg, #667eea, #764ba2);
+    background: linear-gradient(180deg,
+        #667eea 0%,
+        #764ba2 33%,
+        #ed4264 66%,
+        #ff6b6b 100%
+    );
     transform: scaleY(0);
     transform-origin: bottom;
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 0 15px rgba(102, 126, 234, 0.5);
+}
+
+.meshimap-feature-item::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
 }
 
 .meshimap-feature-item:hover::before {
@@ -593,50 +704,116 @@ aside {
     transform-origin: top;
 }
 
+.meshimap-feature-item:hover::after {
+    opacity: 1;
+    animation: shimmer 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translate(-30%, -30%) rotate(0deg);
+    }
+    100% {
+        transform: translate(-10%, -10%) rotate(360deg);
+    }
+}
+
 .meshimap-feature-item:hover {
-    transform: translateY(-8px) translateX(4px);
+    transform: translateY(-12px) translateX(6px) scale(1.02);
     background:
+        radial-gradient(circle at top left, rgba(102, 126, 234, 0.12) 0%, transparent 60%),
         linear-gradient(135deg,
-            rgba(102, 126, 234, 0.08) 0%,
-            rgba(118, 75, 162, 0.1) 100%
+            rgba(102, 126, 234, 0.1) 0%,
+            rgba(118, 75, 162, 0.15) 50%,
+            rgba(237, 66, 100, 0.1) 100%
         );
-    border-color: rgba(102, 126, 234, 0.25);
+    border-image: linear-gradient(135deg,
+        rgba(102, 126, 234, 0.4),
+        rgba(237, 66, 100, 0.3)
+    ) 1;
     box-shadow:
-        0 20px 50px rgba(102, 126, 234, 0.15),
-        0 0 0 1px rgba(255,255,255,0.8) inset;
+        0 25px 60px rgba(102, 126, 234, 0.18),
+        0 15px 35px rgba(237, 66, 100, 0.12),
+        0 0 0 1px rgba(255,255,255,0.9) inset,
+        0 15px 35px rgba(102, 126, 234, 0.08) inset;
 }
 
 .meshimap-feature-icon {
-    font-size: 48px;
+    font-size: 56px;
     flex-shrink: 0;
     line-height: 1;
-    filter: drop-shadow(0 4px 8px rgba(102, 126, 234, 0.2));
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    filter:
+        drop-shadow(0 4px 12px rgba(102, 126, 234, 0.25))
+        drop-shadow(0 2px 6px rgba(237, 66, 100, 0.15));
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    animation: iconFloat 4s ease-in-out infinite;
+}
+
+@keyframes iconFloat {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-4px);
+    }
 }
 
 .meshimap-feature-item:hover .meshimap-feature-icon {
-    transform: scale(1.15) rotate(-5deg);
-    filter: drop-shadow(0 8px 16px rgba(102, 126, 234, 0.35));
+    transform: scale(1.2) rotate(-8deg) translateY(-6px);
+    filter:
+        drop-shadow(0 10px 20px rgba(102, 126, 234, 0.4))
+        drop-shadow(0 5px 12px rgba(237, 66, 100, 0.25))
+        drop-shadow(0 0 30px rgba(102, 126, 234, 0.3));
+    animation: iconBounce 0.6s ease-in-out infinite;
+}
+
+@keyframes iconBounce {
+    0%, 100% {
+        transform: scale(1.2) rotate(-8deg) translateY(-6px);
+    }
+    50% {
+        transform: scale(1.25) rotate(-10deg) translateY(-10px);
+    }
 }
 
 .meshimap-feature-text h3 {
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 800;
     color: #2c3e50;
-    margin-bottom: 12px;
-    background: linear-gradient(135deg, #2c3e50, #667eea);
+    margin-bottom: 14px;
+    background: linear-gradient(135deg,
+        #667eea 0%,
+        #764ba2 40%,
+        #ed4264 100%
+    );
+    background-size: 200% auto;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.meshimap-feature-item:hover .meshimap-feature-text h3 {
+    background-position: 100% center;
+    letter-spacing: 0em;
+    filter: drop-shadow(0 2px 8px rgba(102, 126, 234, 0.3));
 }
 
 .meshimap-feature-text p {
-    font-size: 15px;
-    line-height: 1.7;
-    color: #5a6c7d;
+    font-size: 16px;
+    line-height: 1.8;
+    color: #4a5568;
     margin: 0;
     font-weight: 400;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.meshimap-feature-item:hover .meshimap-feature-text p {
+    color: #2d3748;
+    transform: translateX(2px);
 }
 
 /* エリア選択 */
