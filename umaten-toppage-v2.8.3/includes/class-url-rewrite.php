@@ -88,6 +88,12 @@ class Umaten_Toppage_URL_Rewrite {
             return;
         }
 
+        // 【v2.9.5修正】rrct_activeフラグがある場合、restaurant-review-category-tagsが意図的に処理中
+        // この場合は何もしない（category_nameとtagはプラグインが意図的に設定したもの）
+        if (get_query_var('rrct_active')) {
+            return;
+        }
+
         // 【v2.9.4拡張】WordPress標準のクエリ変数が設定されている場合のみ、他プラグインのクエリ変数をクリア
         // これにより、投稿ページやWordPress標準のタクソノミーは正常に表示され、
         // 各プラグインのカスタムアーカイブページも正常に動作する

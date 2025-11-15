@@ -1,11 +1,62 @@
-# Umaten トップページプラグイン v2.9.4 - 完全版
+# Umaten トップページプラグイン v2.9.5 - 最終完全版
 
 ## バージョン情報
 
-- **現在のバージョン**: v2.9.4
-- **ベースバージョン**: v2.9.3
+- **現在のバージョン**: v2.9.5
+- **ベースバージョン**: v2.9.4
 - **リリース日**: 2025年11月16日
-- **デザインレベル**: 予算80万円相当のプレミアムUI（視認性改善・完全安定版）
+- **デザインレベル**: 予算80万円相当のプレミアムUI（視認性改善・最終完全版）
+
+## v2.9.5の変更点
+
+**restaurant-review-category-tagsの rrct_active フラグを尊重（カテゴリ+タグアーカイブページが正常動作）**
+
+### 重大バグ修正
+
+1. **v2.9.4の誤判定問題を修正**
+   - **問題**: v2.9.4で、`restaurant-review-category-tags`が意図的に設定した`category_name`と`tag`を「WordPress標準クエリ」と誤認し、`rrct_*`クエリ変数をクリアしてしまう
+     - 結果: `/hokkaido/hakodate/ramen/` がトップページにリダイレクト
+     - 原因: `handle_plugin_conflicts()`が`category_name`や`tag`が設定されている=WordPress標準と判断
+   - **解決策**: `rrct_active`フラグをチェックし、`restaurant-review-category-tags`が意図的に処理中の場合は何もしない
+   ```php
+   // 【v2.9.5修正】rrct_activeフラグがある場合、restaurant-review-category-tagsが意図的に処理中
+   // この場合は何もしない（category_nameとtagはプラグインが意図的に設定したもの）
+   if (get_query_var('rrct_active')) {
+       return;
+   }
+   ```
+   - **影響**: カテゴリ+タグアーカイブページが正常に動作し、すべてのプラグイン機能が完全に共存
+
+### コード変更
+
+**修正ファイル**: `includes/class-url-rewrite.php`
+- `handle_plugin_conflicts()`メソッドに`rrct_active`フラグのチェックを追加（91-95行目）
+- WordPress標準クエリチェックの前に、`restaurant-review-category-tags`の意図的な処理かどうかを確認
+
+**修正ファイル**: `umaten-toppage.php`
+- バージョンを`2.9.5`に更新
+- プラグイン説明を更新: rrct_activeフラグの尊重を明記
+
+### 動作確認項目
+
+デプロイ後、以下を確認してください:
+1. **投稿ページが正常に表示される**
+   - 例: `https://umaten.jp/hokkaido/menya-kagetsu-hakodate-kikyo-2/`
+   - 記事の内容が正しく表示される
+2. **カテゴリ+タグアーカイブページが正常に動作**  ← **v2.9.5で修正**
+   - 例: `https://umaten.jp/hokkaido/hakodate/ramen/`
+   - 函館のラーメン記事が正しく表示される
+   - トップページにリダイレクトされない
+3. **検索ウィジェットの機能が正常に動作**
+   - `umaten-restaurant-search-widget`のカスタムアーカイブページが正常に表示される
+4. **WordPress標準のアーカイブページが正常に表示**
+   - カテゴリアーカイブ、タグアーカイブが正常に表示される
+
+### 対応プラグイン一覧
+
+v2.9.5では、以下のプラグインとの衝突を自動的に回避します:
+- ✅ **umaten-restaurant-search-widget** (v2.9.2以降で対応)
+- ✅ **restaurant-review-category-tags** (v2.9.4で新規対応、v2.9.5で完全修正)
 
 ## v2.9.4の変更点
 
