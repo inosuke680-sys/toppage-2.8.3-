@@ -65,6 +65,7 @@ class Umaten_Toppage_URL_Rewrite {
      * @since 2.9.5 rrct_activeフラグのチェックを追加
      * @since 2.9.6 優先度を15に変更し、他プラグインがquery varsを設定する時間を確保
      * @since 2.9.7 parse_queryフックに変更し、WP_Queryの状態を直接確認
+     * @since 2.10.0 【重要】投稿URLの誤認識を修正：widget varsが実際には投稿slugの場合を検出して修正
      *
      * @param WP_Query $query クエリオブジェクト
      */
@@ -98,6 +99,87 @@ class Umaten_Toppage_URL_Rewrite {
         // この場合は何もしない（category_nameとtagはプラグインが意図的に設定したもの）
         if ($query->get('rrct_active')) {
             return;
+        }
+
+        // 【v2.10.0 重要な修正】
+        // umaten-restaurant-search-widget の広範なリライトルールが投稿URLを誤ってキャプチャする問題を修正
+        //
+        // 問題：
+        // - /hokkaido/menya-kagetsu-hakodate-kikyo-2/ のような投稿URLが
+        // - ^([^/]+)/([^/]+)/?$ のルールにマッチして umaten_region/umaten_area として扱われる
+        // - その結果、WordPressは投稿を見つけられず、ホームページにフォールバックしてしまう
+        //
+        // 解決策：
+        // - umaten_area や umaten_genre が実際には投稿スラッグかどうかをチェック
+        // - もし投稿が見つかれば、適切な WordPress クエリ変数（category_name + name）に変換
+        if ($has_search_widget_vars && !$query->get('name') && !$query->get('category_name')) {
+            $umaten_region = $query->get('umaten_region');
+            $umaten_area = $query->get('umaten_area');
+            $umaten_genre = $query->get('umaten_genre');
+
+            // 2セグメントURL: /region/area/ または /category/post-slug/
+            if ($umaten_region && $umaten_area && !$umaten_genre) {
+                // umaten_area が投稿スラッグかチェック
+                $post = $this->find_post_by_slug($umaten_area);
+                if ($post) {
+                    // umaten_region がカテゴリスラッグかチェック
+                    $category = get_term_by('slug', $umaten_region, 'category');
+                    if ($category) {
+                        // これは /category/post-slug/ のパターン
+                        $query->set('category_name', $umaten_region);
+                        $query->set('name', $umaten_area);
+                        $query->set('umaten_region', '');
+                        $query->set('umaten_area', '');
+
+                        if (defined('WP_DEBUG') && WP_DEBUG) {
+                            error_log("Umaten Toppage v2.10.0: Detected post URL misidentified as widget vars. Converting umaten_region={$umaten_region}, umaten_area={$umaten_area} → category_name={$umaten_region}, name={$umaten_area} (Post ID: {$post->ID})");
+                        }
+                        return;
+                    }
+                }
+            }
+
+            // 3セグメントURL: /region/area/genre/ または /parent-cat/child-cat/post-slug/
+            if ($umaten_region && $umaten_area && $umaten_genre) {
+                // umaten_genre が投稿スラッグかチェック
+                $post = $this->find_post_by_slug($umaten_genre);
+                if ($post) {
+                    // これは /parent-category/child-category/post-slug/ のパターンの可能性
+                    // WordPress の /%category%/%postname%/ では、category は階層的に結合される
+                    $parent_cat = get_term_by('slug', $umaten_region, 'category');
+                    $child_cat = get_term_by('slug', $umaten_area, 'category');
+
+                    if ($parent_cat && $child_cat) {
+                        // 親/子カテゴリの組み合わせとして設定
+                        $query->set('category_name', $umaten_region . '/' . $umaten_area);
+                        $query->set('name', $umaten_genre);
+                        $query->set('umaten_region', '');
+                        $query->set('umaten_area', '');
+                        $query->set('umaten_genre', '');
+
+                        if (defined('WP_DEBUG') && WP_DEBUG) {
+                            error_log("Umaten Toppage v2.10.0: Detected post URL with hierarchy misidentified as widget vars. Converting umaten_region={$umaten_region}, umaten_area={$umaten_area}, umaten_genre={$umaten_genre} → category_name={$umaten_region}/{$umaten_area}, name={$umaten_genre} (Post ID: {$post->ID})");
+                        }
+                        return;
+                    } else if ($parent_cat || $child_cat) {
+                        // 少なくとも1つがカテゴリの場合も試す
+                        $category_path = '';
+                        if ($parent_cat) $category_path = $umaten_region;
+                        if ($child_cat) $category_path = $category_path ? $category_path . '/' . $umaten_area : $umaten_area;
+
+                        $query->set('category_name', $category_path);
+                        $query->set('name', $umaten_genre);
+                        $query->set('umaten_region', '');
+                        $query->set('umaten_area', '');
+                        $query->set('umaten_genre', '');
+
+                        if (defined('WP_DEBUG') && WP_DEBUG) {
+                            error_log("Umaten Toppage v2.10.0: Detected post URL misidentified as widget vars. Converting → category_name={$category_path}, name={$umaten_genre} (Post ID: {$post->ID})");
+                        }
+                        return;
+                    }
+                }
+            }
         }
 
         // 【v2.9.4拡張】WordPress標準のクエリ変数が設定されている場合のみ、他プラグインのクエリ変数をクリア
@@ -155,7 +237,7 @@ class Umaten_Toppage_URL_Rewrite {
                 if ($has_rrct_vars) $cleared_plugins[] = 'restaurant-review-category-tags';
 
                 error_log(sprintf(
-                    "Umaten Toppage v2.9.7: Cleared plugin query vars from [%s] (WP standard query detected: %s)",
+                    "Umaten Toppage v2.10.0: Cleared plugin query vars from [%s] (WP standard query detected: %s)",
                     implode(', ', $cleared_plugins),
                     implode(', ', $detected_vars)
                 ));
