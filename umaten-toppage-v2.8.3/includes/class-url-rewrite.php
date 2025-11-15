@@ -41,8 +41,11 @@ class Umaten_Toppage_URL_Rewrite {
         // WP_Queryの状態を直接確認できるため、より正確な判定が可能
         add_action('parse_query', array($this, 'handle_plugin_conflicts'), 999);
 
-        // 【v2.9.1】404時のみカスタム処理を実行（優先度を999に設定）
-        add_action('template_redirect', array($this, 'handle_404_redirect'), 999);
+        // 【v2.9.8】404リダイレクト処理を無効化
+        // この処理が /hokkaido/hakodate/ や /hokkaido/hakodate/ramen/ を
+        // 404と判定してトップページにリダイレクトしていたのが問題の根本原因
+        // 他のプラグイン（restaurant-review-category-tags等）のリライトルールに任せる
+        // add_action('template_redirect', array($this, 'handle_404_redirect'), 999);
     }
 
     /**
