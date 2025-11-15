@@ -36,9 +36,69 @@ class Umaten_Toppage_URL_Rewrite {
      * コンストラクタ
      */
     private function __construct() {
-        // 【v2.9.1】カスタムリライトルールを削除（投稿ページが表示されない問題の修正）
-        // 404時のみカスタム処理を実行（優先度を999に設定）
+        // 【v2.9.2】umaten-restaurant-search-widgetとの衝突を回避
+        // 優先度1で早期に処理し、WordPress標準のクエリを優先
+        add_action('template_redirect', array($this, 'handle_search_widget_conflict'), 1);
+
+        // 【v2.9.1】404時のみカスタム処理を実行（優先度を999に設定）
         add_action('template_redirect', array($this, 'handle_404_redirect'), 999);
+    }
+
+    /**
+     * umaten-restaurant-search-widgetプラグインとの衝突を回避
+     *
+     * umaten-restaurant-search-widgetが追加する広範囲なリライトルールが
+     * 投稿ページやWordPress標準のタクソノミーと衝突するのを防ぐ。
+     * WordPress標準のクエリが既に存在する場合は、検索ウィジェットの
+     * クエリ変数を無視することで、両方のプラグインが共存できるようにする。
+     *
+     * @since 2.9.2
+     */
+    public function handle_search_widget_conflict() {
+        global $wp_query;
+
+        // フロントエンドのリクエストのみ処理
+        if (!$this->is_frontend_request()) {
+            return;
+        }
+
+        // umaten_region/umaten_area/umaten_genreが設定されているか確認
+        $has_search_widget_vars = (
+            get_query_var('umaten_region') ||
+            get_query_var('umaten_area') ||
+            get_query_var('umaten_genre')
+        );
+
+        if (!$has_search_widget_vars) {
+            return;
+        }
+
+        // WordPress標準のクエリが既に設定されている場合は、検索ウィジェットのクエリ変数を無視
+        // これにより投稿ページ、カテゴリ、タグアーカイブが正常に表示される
+        if (is_singular() || is_single() || is_page() ||
+            is_category() || is_tag() || is_tax() ||
+            is_archive() || is_home() || is_front_page()) {
+
+            // 検索ウィジェットのクエリ変数をクリア
+            set_query_var('umaten_region', '');
+            set_query_var('umaten_area', '');
+            set_query_var('umaten_genre', '');
+
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                $query_type = 'unknown';
+                if (is_singular()) $query_type = 'singular';
+                elseif (is_single()) $query_type = 'single';
+                elseif (is_page()) $query_type = 'page';
+                elseif (is_category()) $query_type = 'category';
+                elseif (is_tag()) $query_type = 'tag';
+                elseif (is_tax()) $query_type = 'taxonomy';
+                elseif (is_archive()) $query_type = 'archive';
+                elseif (is_home()) $query_type = 'home';
+                elseif (is_front_page()) $query_type = 'front_page';
+
+                error_log("Umaten Toppage v2.9.2: Cleared search widget query vars to prevent conflict (Query type: {$query_type})");
+            }
+        }
     }
 
     /**
