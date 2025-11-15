@@ -1,11 +1,73 @@
-# Umaten トップページプラグイン v2.9.3 - 安定版
+# Umaten トップページプラグイン v2.9.4 - 完全版
 
 ## バージョン情報
 
-- **現在のバージョン**: v2.9.3
-- **ベースバージョン**: v2.9.2
-- **リリース日**: 2025年11月15日
-- **デザインレベル**: 予算80万円相当のプレミアムUI（視認性改善・安定版）
+- **現在のバージョン**: v2.9.4
+- **ベースバージョン**: v2.9.3
+- **リリース日**: 2025年11月16日
+- **デザインレベル**: 予算80万円相当のプレミアムUI（視認性改善・完全安定版）
+
+## v2.9.4の変更点
+
+**複数プラグインとの衝突を完全に回避（すべてのプラグインが共存可能）**
+
+### 重大機能追加・バグ修正
+
+1. **restaurant-review-category-tagsプラグインとの衝突も回避**
+   - **問題**: `restaurant-review-category-tags`プラグインが追加する広範囲なリライトルールが、投稿ページやWordPress標準のタクソノミーアーカイブと衝突
+     - プラグインが追加するルール:
+       - 3階層: `^([^/]+)/([^/]+)/([^/]+)/?$` → `rrct_parent_category`/`rrct_child_category`/`rrct_tag`
+       - 2階層: `^([^/]+)/([^/]+)/?$` → `rrct_category`/`rrct_tag`
+     - 優先度 `top` で最優先されるため、WordPress標準ルールより先に処理される
+     - 結果: 投稿ページ（例: `/hokkaido/menya-kagetsu-hakodate-kikyo-2/`）がカテゴリ+タグページとして誤認識される
+   - **原因**: `umaten-restaurant-search-widget`と同様の設計で、広範囲なリライトルールを追加
+   - **解決策**: `handle_plugin_conflicts()`メソッドを拡張し、以下のプラグインすべてのクエリ変数をクリア
+     - **umaten-restaurant-search-widget**: `umaten_region`, `umaten_area`, `umaten_genre`
+     - **restaurant-review-category-tags**: `rrct_category`, `rrct_parent_category`, `rrct_child_category`, `rrct_tag`, `rrct_active`
+   - **影響**: 3つのプラグインすべてが共存可能になり、すべての機能が正常に動作
+
+2. **メソッド名を変更してより汎用的に**
+   - `handle_search_widget_conflict()` → `handle_plugin_conflicts()`
+   - 複数のプラグインとの衝突を一元管理
+
+### コード変更
+
+**修正ファイル**: `includes/class-url-rewrite.php`
+- メソッド名変更: `handle_search_widget_conflict()` → `handle_plugin_conflicts()`
+- `handle_plugin_conflicts()`メソッドを拡張:
+  - `umaten-restaurant-search-widget`のクエリ変数検出: `umaten_region`, `umaten_area`, `umaten_genre`
+  - `restaurant-review-category-tags`のクエリ変数検出: `rrct_category`, `rrct_parent_category`, `rrct_child_category`, `rrct_tag`, `rrct_active`
+  - WordPress標準のクエリが存在する場合、両プラグインのクエリ変数をクリア
+  - デバッグログで衝突回避を記録（クリアされたプラグイン名も表示）
+
+**修正ファイル**: `umaten-toppage.php`
+- バージョンを`2.9.4`に更新
+- プラグイン説明を更新: 両プラグインとの共存を明記
+
+### 動作確認項目
+
+デプロイ後、以下を確認してください:
+1. **投稿ページが正常に表示される**
+   - 例: `https://umaten.jp/hokkaido/menya-kagetsu-hakodate-kikyo-2/`
+   - 記事の内容が正しく表示される
+   - カテゴリ+タグページとして誤認識されない
+2. **ジャンルアーカイブページが正常に動作**
+   - エリア選択 → 子カテゴリ選択 → ジャンル選択
+   - 該当ジャンルのアーカイブページが正しく表示される
+3. **検索ウィジェットの機能が正常に動作**
+   - `umaten-restaurant-search-widget`の検索機能が問題なく動作する
+   - カスタムアーカイブページ（例: `/hokkaido/niseko/ramen/`）が正常に表示される
+4. **restaurant-review-category-tagsの機能が正常に動作**
+   - カテゴリ+タグの組み合わせページが正常に表示される
+   - 親カテゴリ+子カテゴリ+タグの組み合わせページが正常に表示される
+5. **WordPress標準のアーカイブページが正常に表示**
+   - カテゴリアーカイブ、タグアーカイブが正常に表示される
+
+### 対応プラグイン一覧
+
+v2.9.4では、以下のプラグインとの衝突を自動的に回避します:
+- ✅ **umaten-restaurant-search-widget** (v2.9.2以降で対応)
+- ✅ **restaurant-review-category-tags** (v2.9.4で新規対応)
 
 ## v2.9.3の変更点
 
