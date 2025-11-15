@@ -36,10 +36,10 @@ class Umaten_Toppage_URL_Rewrite {
      * コンストラクタ
      */
     private function __construct() {
-        // 【v2.9.6】他プラグインとの衝突を完全に回避
-        // 優先度15で処理し、他プラグインがquery varsを設定した後にチェック
-        // restaurant-review-category-tagsなどのプラグインがrrct_activeなどを設定する時間を確保
-        add_action('template_redirect', array($this, 'handle_plugin_conflicts'), 15);
+        // 【v2.9.7】parse_query フックを使用し、WP_Query解析直後に処理
+        // これにより、すべてのプラグインの処理後に確実に実行され、
+        // WP_Queryの状態を直接確認できるため、より正確な判定が可能
+        add_action('parse_query', array($this, 'handle_plugin_conflicts'), 999);
 
         // 【v2.9.1】404時のみカスタム処理を実行（優先度を999に設定）
         add_action('template_redirect', array($this, 'handle_404_redirect'), 999);
@@ -62,28 +62,29 @@ class Umaten_Toppage_URL_Rewrite {
      * @since 2.9.4 restaurant-review-category-tagsプラグインとの衝突も回避
      * @since 2.9.5 rrct_activeフラグのチェックを追加
      * @since 2.9.6 優先度を15に変更し、他プラグインがquery varsを設定する時間を確保
+     * @since 2.9.7 parse_queryフックに変更し、WP_Queryの状態を直接確認
+     *
+     * @param WP_Query $query クエリオブジェクト
      */
-    public function handle_plugin_conflicts() {
-        global $wp_query;
-
-        // フロントエンドのリクエストのみ処理
-        if (!$this->is_frontend_request()) {
+    public function handle_plugin_conflicts($query) {
+        // メインクエリかつフロントエンドリクエストのみ処理
+        if (!$query->is_main_query() || !$this->is_frontend_request()) {
             return;
         }
 
         // 他プラグインのクエリ変数が設定されているか確認
         $has_search_widget_vars = (
-            get_query_var('umaten_region') ||
-            get_query_var('umaten_area') ||
-            get_query_var('umaten_genre')
+            $query->get('umaten_region') ||
+            $query->get('umaten_area') ||
+            $query->get('umaten_genre')
         );
 
         $has_rrct_vars = (
-            get_query_var('rrct_category') ||
-            get_query_var('rrct_parent_category') ||
-            get_query_var('rrct_child_category') ||
-            get_query_var('rrct_tag') ||
-            get_query_var('rrct_active')
+            $query->get('rrct_category') ||
+            $query->get('rrct_parent_category') ||
+            $query->get('rrct_child_category') ||
+            $query->get('rrct_tag') ||
+            $query->get('rrct_active')
         );
 
         // どちらのプラグインのクエリ変数も設定されていない場合は何もしない
@@ -93,7 +94,7 @@ class Umaten_Toppage_URL_Rewrite {
 
         // 【v2.9.5修正】rrct_activeフラグがある場合、restaurant-review-category-tagsが意図的に処理中
         // この場合は何もしない（category_nameとtagはプラグインが意図的に設定したもの）
-        if (get_query_var('rrct_active')) {
+        if ($query->get('rrct_active')) {
             return;
         }
 
@@ -103,19 +104,19 @@ class Umaten_Toppage_URL_Rewrite {
 
         $has_wp_standard_query = (
             // 投稿名（例: /hokkaido/menya-kagetsu-hakodate-kikyo-2/）
-            get_query_var('name') ||
-            get_query_var('pagename') ||
+            $query->get('name') ||
+            $query->get('pagename') ||
             // カテゴリ名（例: /category/news/）
-            get_query_var('category_name') ||
+            $query->get('category_name') ||
             // タグ（例: /tag/ramen/）
-            get_query_var('tag') ||
+            $query->get('tag') ||
             // 投稿ID
-            get_query_var('p') ||
-            get_query_var('page_id') ||
+            $query->get('p') ||
+            $query->get('page_id') ||
             // カスタムタクソノミー（region, area, genreなど）
-            get_query_var('region') ||
-            get_query_var('area') ||
-            get_query_var('genre')
+            $query->get('region') ||
+            $query->get('area') ||
+            $query->get('genre')
         );
 
         if ($has_wp_standard_query) {
@@ -123,36 +124,36 @@ class Umaten_Toppage_URL_Rewrite {
 
             // 1. umaten-restaurant-search-widget のクエリ変数をクリア
             if ($has_search_widget_vars) {
-                set_query_var('umaten_region', '');
-                set_query_var('umaten_area', '');
-                set_query_var('umaten_genre', '');
+                $query->set('umaten_region', '');
+                $query->set('umaten_area', '');
+                $query->set('umaten_genre', '');
             }
 
             // 2. restaurant-review-category-tags のクエリ変数をクリア
             if ($has_rrct_vars) {
-                set_query_var('rrct_category', '');
-                set_query_var('rrct_parent_category', '');
-                set_query_var('rrct_child_category', '');
-                set_query_var('rrct_tag', '');
-                set_query_var('rrct_active', '');
+                $query->set('rrct_category', '');
+                $query->set('rrct_parent_category', '');
+                $query->set('rrct_child_category', '');
+                $query->set('rrct_tag', '');
+                $query->set('rrct_active', '');
             }
 
             if (defined('WP_DEBUG') && WP_DEBUG) {
                 $detected_vars = array();
-                if (get_query_var('name')) $detected_vars[] = 'name=' . get_query_var('name');
-                if (get_query_var('pagename')) $detected_vars[] = 'pagename=' . get_query_var('pagename');
-                if (get_query_var('category_name')) $detected_vars[] = 'category_name=' . get_query_var('category_name');
-                if (get_query_var('tag')) $detected_vars[] = 'tag=' . get_query_var('tag');
-                if (get_query_var('region')) $detected_vars[] = 'region=' . get_query_var('region');
-                if (get_query_var('area')) $detected_vars[] = 'area=' . get_query_var('area');
-                if (get_query_var('genre')) $detected_vars[] = 'genre=' . get_query_var('genre');
+                if ($query->get('name')) $detected_vars[] = 'name=' . $query->get('name');
+                if ($query->get('pagename')) $detected_vars[] = 'pagename=' . $query->get('pagename');
+                if ($query->get('category_name')) $detected_vars[] = 'category_name=' . $query->get('category_name');
+                if ($query->get('tag')) $detected_vars[] = 'tag=' . $query->get('tag');
+                if ($query->get('region')) $detected_vars[] = 'region=' . $query->get('region');
+                if ($query->get('area')) $detected_vars[] = 'area=' . $query->get('area');
+                if ($query->get('genre')) $detected_vars[] = 'genre=' . $query->get('genre');
 
                 $cleared_plugins = array();
                 if ($has_search_widget_vars) $cleared_plugins[] = 'umaten-restaurant-search-widget';
                 if ($has_rrct_vars) $cleared_plugins[] = 'restaurant-review-category-tags';
 
                 error_log(sprintf(
-                    "Umaten Toppage v2.9.4: Cleared plugin query vars from [%s] (WP standard query detected: %s)",
+                    "Umaten Toppage v2.9.7: Cleared plugin query vars from [%s] (WP standard query detected: %s)",
                     implode(', ', $cleared_plugins),
                     implode(', ', $detected_vars)
                 ));
