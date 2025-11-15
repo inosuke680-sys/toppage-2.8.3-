@@ -335,7 +335,7 @@
             $grid.empty();
 
             // デバッグログ
-            console.log('[v2.8.0] renderTags called - Parent:', self.currentParentSlug, ', Child:', self.currentChildSlug, ', Tags:', tags.length);
+            console.log('[v2.8.6] renderTags called - Parent:', self.currentParentSlug, ', Child:', self.currentChildSlug, ', Tags:', tags.length);
 
             if (tags.length === 0) {
                 $grid.html(`
@@ -348,9 +348,10 @@
                 return;
             }
 
-            // 【v2.8.0修正】currentParentSlugとcurrentChildSlugの検証
+            // 【v2.8.6修正】currentParentSlugとcurrentChildSlugの検証を先に実行
             if (!self.currentParentSlug || !self.currentChildSlug) {
-                console.error('[v2.8.0] ERROR: currentParentSlug or currentChildSlug is empty!');
+                console.error('[v2.8.6] ERROR: currentParentSlug or currentChildSlug is empty!',
+                    'Parent:', self.currentParentSlug, 'Child:', self.currentChildSlug);
                 $grid.html(`
                     <div class="meshimap-coming-soon">
                         <div class="meshimap-coming-soon-icon">&#9888;</div>
@@ -361,21 +362,45 @@
                 return;
             }
 
-            // 「すべてのジャンル」ボタンを最初に追加
+            // 【v2.8.6修正】検証後にallGenresUrlを生成（バグ修正）
             const allGenresUrl = umatenToppage.siteUrl + '/' + self.currentParentSlug + '/' + self.currentChildSlug + '/';
-            console.log('[v2.8.0] All genres URL:', allGenresUrl);
+            console.log('[v2.8.6] All genres URL generated:', allGenresUrl);
 
+            // 【v2.8.6修正】URLが正しく生成されたか再確認
+            if (!allGenresUrl || allGenresUrl === umatenToppage.siteUrl + '///' || allGenresUrl.includes('//')) {
+                console.error('[v2.8.6] ERROR: Invalid allGenresUrl generated:', allGenresUrl);
+                $grid.html(`
+                    <div class="meshimap-coming-soon">
+                        <div class="meshimap-coming-soon-icon">&#9888;</div>
+                        <h3 class="meshimap-coming-soon-title">URLエラー</h3>
+                        <p class="meshimap-coming-soon-text">URLの生成に失敗しました。もう一度お試しください。</p>
+                    </div>
+                `);
+                return;
+            }
+
+            // 「すべてのジャンル」ボタンを最初に追加
             const $allGenresItem = $('<a>')
                 .attr('href', allGenresUrl)
                 .addClass('meshimap-tag-item meshimap-tag-item-all')
                 .html('🍴 すべてのジャンル')
                 .attr('data-tag-slug', '')
+                .attr('data-parent', self.currentParentSlug)
+                .attr('data-child', self.currentChildSlug)
                 .attr('data-full-url', allGenresUrl);
 
             $allGenresItem.on('click', function(e) {
-                console.log('[v2.8.0] すべてのジャンルクリック - URL:', allGenresUrl);
-                // デフォルトのリンク動作を許可（href属性で遷移）
-                // e.preventDefault()は削除
+                const targetUrl = $(this).attr('href');
+                console.log('[v2.8.6] すべてのジャンルクリック - 遷移先URL:', targetUrl);
+
+                // URLが正しいか最終チェック
+                if (!targetUrl || targetUrl === '/' || targetUrl.includes('//')) {
+                    console.error('[v2.8.6] Invalid URL detected, preventing navigation');
+                    e.preventDefault();
+                    alert('URLが正しく生成されませんでした。もう一度お試しください。');
+                    return false;
+                }
+                // URLが正しい場合は、デフォルトのリンク動作を許可
             });
 
             $grid.append($allGenresItem);
