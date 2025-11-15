@@ -49,10 +49,11 @@ class Umaten_Toppage_URL_Rewrite {
      *
      * umaten-restaurant-search-widgetが追加する広範囲なリライトルールが
      * 投稿ページやWordPress標準のタクソノミーと衝突するのを防ぐ。
-     * WordPress標準のクエリが既に存在する場合は、検索ウィジェットの
-     * クエリ変数を無視することで、両方のプラグインが共存できるようにする。
+     * WordPress標準のクエリ変数が同時に設定されている場合のみ、
+     * 検索ウィジェットのクエリ変数をクリアすることで、両方のプラグインが共存できるようにする。
      *
      * @since 2.9.2
+     * @since 2.9.3 条件を修正：WordPress標準のクエリ変数が設定されている場合のみクリア
      */
     public function handle_search_widget_conflict() {
         global $wp_query;
@@ -73,30 +74,44 @@ class Umaten_Toppage_URL_Rewrite {
             return;
         }
 
-        // WordPress標準のクエリが既に設定されている場合は、検索ウィジェットのクエリ変数を無視
-        // これにより投稿ページ、カテゴリ、タグアーカイブが正常に表示される
-        if (is_singular() || is_single() || is_page() ||
-            is_category() || is_tag() || is_tax() ||
-            is_archive() || is_home() || is_front_page()) {
+        // 【v2.9.3修正】WordPress標準のクエリ変数が設定されている場合のみ、検索ウィジェットのクエリ変数をクリア
+        // これにより、投稿ページやWordPress標準のタクソノミーは正常に表示され、
+        // 検索ウィジェットのカスタムアーカイブページも正常に動作する
 
-            // 検索ウィジェットのクエリ変数をクリア
+        $has_wp_standard_query = (
+            // 投稿名（例: /hokkaido/menya-kagetsu-hakodate-kikyo-2/）
+            get_query_var('name') ||
+            get_query_var('pagename') ||
+            // カテゴリ名（例: /category/news/）
+            get_query_var('category_name') ||
+            // タグ（例: /tag/ramen/）
+            get_query_var('tag') ||
+            // 投稿ID
+            get_query_var('p') ||
+            get_query_var('page_id') ||
+            // カスタムタクソノミー（region, area, genreなど）
+            get_query_var('region') ||
+            get_query_var('area') ||
+            get_query_var('genre')
+        );
+
+        if ($has_wp_standard_query) {
+            // WordPress標準のクエリが優先されるべきなので、検索ウィジェットのクエリ変数をクリア
             set_query_var('umaten_region', '');
             set_query_var('umaten_area', '');
             set_query_var('umaten_genre', '');
 
             if (defined('WP_DEBUG') && WP_DEBUG) {
-                $query_type = 'unknown';
-                if (is_singular()) $query_type = 'singular';
-                elseif (is_single()) $query_type = 'single';
-                elseif (is_page()) $query_type = 'page';
-                elseif (is_category()) $query_type = 'category';
-                elseif (is_tag()) $query_type = 'tag';
-                elseif (is_tax()) $query_type = 'taxonomy';
-                elseif (is_archive()) $query_type = 'archive';
-                elseif (is_home()) $query_type = 'home';
-                elseif (is_front_page()) $query_type = 'front_page';
+                $detected_vars = array();
+                if (get_query_var('name')) $detected_vars[] = 'name=' . get_query_var('name');
+                if (get_query_var('pagename')) $detected_vars[] = 'pagename=' . get_query_var('pagename');
+                if (get_query_var('category_name')) $detected_vars[] = 'category_name=' . get_query_var('category_name');
+                if (get_query_var('tag')) $detected_vars[] = 'tag=' . get_query_var('tag');
+                if (get_query_var('region')) $detected_vars[] = 'region=' . get_query_var('region');
+                if (get_query_var('area')) $detected_vars[] = 'area=' . get_query_var('area');
+                if (get_query_var('genre')) $detected_vars[] = 'genre=' . get_query_var('genre');
 
-                error_log("Umaten Toppage v2.9.2: Cleared search widget query vars to prevent conflict (Query type: {$query_type})");
+                error_log("Umaten Toppage v2.9.3: Cleared search widget query vars (WP standard query detected: " . implode(', ', $detected_vars) . ")");
             }
         }
     }
