@@ -488,7 +488,7 @@ aside {
     font-weight: bold;
 }
 
-/* サイト説明セクション - プレミアムデザイン（80万円クオリティ） */
+/* サイト説明セクション - プレミアムデザイン v2.8.8（視認性改善版） */
 .meshimap-about-content {
     max-width: 1200px;
     margin: 0 auto;
@@ -496,49 +496,48 @@ aside {
 
 .meshimap-about-description {
     background:
-        radial-gradient(circle at top right, rgba(102, 126, 234, 0.08) 0%, transparent 50%),
-        radial-gradient(circle at bottom left, rgba(237, 66, 100, 0.08) 0%, transparent 50%),
-        linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,249,250,0.98) 100%);
-    backdrop-filter: blur(30px) saturate(180%);
-    -webkit-backdrop-filter: blur(30px) saturate(180%);
-    padding: 70px;
-    border-radius: 40px;
+        radial-gradient(circle at top right, rgba(102, 126, 234, 0.04) 0%, transparent 60%),
+        radial-gradient(circle at bottom left, rgba(237, 66, 100, 0.04) 0%, transparent 60%),
+        linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(250,251,252,1) 100%);
+    backdrop-filter: blur(15px) saturate(120%);
+    -webkit-backdrop-filter: blur(15px) saturate(120%);
+    padding: 60px 70px;
+    border-radius: 32px;
     box-shadow:
-        0 30px 90px rgba(102, 126, 234, 0.12),
-        0 15px 45px rgba(237, 66, 100, 0.08),
-        0 0 0 1px rgba(255, 255, 255, 0.8),
-        0 0 0 2px rgba(102, 126, 234, 0.15),
-        0 20px 60px rgba(102, 126, 234, 0.08) inset,
-        0 -5px 20px rgba(255, 255, 255, 0.5) inset;
-    border: 3px solid;
+        0 20px 60px rgba(102, 126, 234, 0.08),
+        0 10px 30px rgba(0, 0, 0, 0.04),
+        0 0 0 1px rgba(255, 255, 255, 0.95),
+        0 0 0 2px rgba(102, 126, 234, 0.1),
+        0 15px 40px rgba(102, 126, 234, 0.05) inset;
+    border: 2px solid transparent;
     border-image: linear-gradient(135deg,
-        rgba(102, 126, 234, 0.4),
-        rgba(237, 66, 100, 0.3),
-        rgba(255, 142, 83, 0.4)
+        rgba(102, 126, 234, 0.25),
+        rgba(237, 66, 100, 0.2),
+        rgba(255, 142, 83, 0.25)
     ) 1;
     position: relative;
     overflow: hidden;
-    animation: aboutFloat 12s ease-in-out infinite;
+    animation: aboutFloat 18s ease-in-out infinite;
 }
 
 @keyframes aboutFloat {
     0%, 100% {
-        transform: translateY(0) scale(1);
+        transform: translateY(0);
         box-shadow:
-            0 30px 90px rgba(102, 126, 234, 0.12),
-            0 15px 45px rgba(237, 66, 100, 0.08),
-            0 0 0 1px rgba(255, 255, 255, 0.8),
-            0 0 0 2px rgba(102, 126, 234, 0.15),
-            0 20px 60px rgba(102, 126, 234, 0.08) inset;
+            0 20px 60px rgba(102, 126, 234, 0.08),
+            0 10px 30px rgba(0, 0, 0, 0.04),
+            0 0 0 1px rgba(255, 255, 255, 0.95),
+            0 0 0 2px rgba(102, 126, 234, 0.1),
+            0 15px 40px rgba(102, 126, 234, 0.05) inset;
     }
     50% {
-        transform: translateY(-8px) scale(1.002);
+        transform: translateY(-3px);
         box-shadow:
-            0 40px 100px rgba(102, 126, 234, 0.15),
-            0 20px 50px rgba(237, 66, 100, 0.1),
-            0 0 0 1px rgba(255, 255, 255, 0.9),
-            0 0 0 2px rgba(102, 126, 234, 0.2),
-            0 25px 70px rgba(102, 126, 234, 0.1) inset;
+            0 24px 70px rgba(102, 126, 234, 0.1),
+            0 12px 35px rgba(0, 0, 0, 0.05),
+            0 0 0 1px rgba(255, 255, 255, 1),
+            0 0 0 2px rgba(102, 126, 234, 0.12),
+            0 18px 45px rgba(102, 126, 234, 0.06) inset;
     }
 }
 
@@ -572,11 +571,11 @@ aside {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, rgba(102, 126, 234, 0.06) 0%, transparent 70%);
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(102, 126, 234, 0.03) 0%, transparent 70%);
     transform: translate(-50%, -50%);
-    animation: pulse 8s ease-in-out infinite;
+    animation: pulse 12s ease-in-out infinite;
     pointer-events: none;
     z-index: 0;
 }
@@ -584,49 +583,41 @@ aside {
 @keyframes pulse {
     0%, 100% {
         transform: translate(-50%, -50%) scale(1);
-        opacity: 0.5;
+        opacity: 0.4;
     }
     50% {
-        transform: translate(-50%, -50%) scale(1.1);
-        opacity: 0.8;
+        transform: translate(-50%, -50%) scale(1.05);
+        opacity: 0.6;
     }
 }
 
 .meshimap-about-description > p {
-    font-size: 19px;
+    font-size: 17px;
     line-height: 2;
-    color: #2c3e50;
-    margin-bottom: 24px;
+    color: #1a202c;
+    margin-bottom: 20px;
     font-weight: 400;
     position: relative;
     z-index: 1;
-    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
-    letter-spacing: 0.02em;
+    letter-spacing: 0.01em;
 }
 
 .meshimap-about-description > p:first-of-type {
-    font-size: 26px;
+    font-size: 24px;
     font-weight: 700;
+    color: #2d3748;
+    letter-spacing: -0.01em;
+    line-height: 1.6;
+    margin-bottom: 24px;
+    position: relative;
     background: linear-gradient(135deg,
         #667eea 0%,
-        #764ba2 30%,
-        #ed4264 60%,
-        #ff6b6b 100%
+        #764ba2 50%,
+        #ed4264 100%
     );
-    background-size: 200% auto;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    animation: textGradientShift 6s ease-in-out infinite;
-    letter-spacing: -0.02em;
-    line-height: 1.6;
-    margin-bottom: 28px;
-    filter: drop-shadow(0 2px 4px rgba(102, 126, 234, 0.15));
-}
-
-@keyframes textGradientShift {
-    0%, 100% { background-position: 0% center; }
-    50% { background-position: 100% center; }
 }
 
 .meshimap-about-features {
@@ -640,29 +631,27 @@ aside {
 
 .meshimap-feature-item {
     display: flex;
-    gap: 24px;
-    padding: 42px 36px;
+    gap: 20px;
+    padding: 36px 32px;
     background:
-        radial-gradient(circle at top left, rgba(102, 126, 234, 0.06) 0%, transparent 60%),
+        radial-gradient(circle at top left, rgba(102, 126, 234, 0.03) 0%, transparent 70%),
         linear-gradient(135deg,
-            rgba(102, 126, 234, 0.05) 0%,
-            rgba(118, 75, 162, 0.08) 50%,
-            rgba(237, 66, 100, 0.05) 100%
+            rgba(255, 255, 255, 0.95) 0%,
+            rgba(250, 251, 252, 0.98) 100%
         );
-    backdrop-filter: blur(20px) saturate(150%);
-    -webkit-backdrop-filter: blur(20px) saturate(150%);
-    border-radius: 28px;
+    backdrop-filter: blur(10px) saturate(110%);
+    -webkit-backdrop-filter: blur(10px) saturate(110%);
+    border-radius: 24px;
     border: 2px solid;
     border-image: linear-gradient(135deg,
-        rgba(102, 126, 234, 0.2),
-        rgba(237, 66, 100, 0.15)
+        rgba(102, 126, 234, 0.15),
+        rgba(237, 66, 100, 0.12)
     ) 1;
     box-shadow:
-        0 15px 40px rgba(102, 126, 234, 0.08),
-        0 8px 20px rgba(0,0,0,0.04),
-        0 0 0 1px rgba(255,255,255,0.6) inset,
-        0 10px 25px rgba(102, 126, 234, 0.04) inset;
-    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        0 10px 30px rgba(102, 126, 234, 0.06),
+        0 5px 15px rgba(0,0,0,0.03),
+        0 0 0 1px rgba(255,255,255,0.8) inset;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
 }
@@ -672,31 +661,16 @@ aside {
     position: absolute;
     top: 0;
     left: 0;
-    width: 6px;
+    width: 4px;
     height: 100%;
     background: linear-gradient(180deg,
         #667eea 0%,
-        #764ba2 33%,
-        #ed4264 66%,
-        #ff6b6b 100%
+        #764ba2 50%,
+        #ed4264 100%
     );
     transform: scaleY(0);
     transform-origin: bottom;
-    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: 0 0 15px rgba(102, 126, 234, 0.5);
-}
-
-.meshimap-feature-item::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
-    opacity: 0;
-    transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    pointer-events: none;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .meshimap-feature-item:hover::before {
@@ -704,116 +678,59 @@ aside {
     transform-origin: top;
 }
 
-.meshimap-feature-item:hover::after {
-    opacity: 1;
-    animation: shimmer 2s ease-in-out infinite;
-}
-
-@keyframes shimmer {
-    0% {
-        transform: translate(-30%, -30%) rotate(0deg);
-    }
-    100% {
-        transform: translate(-10%, -10%) rotate(360deg);
-    }
-}
-
 .meshimap-feature-item:hover {
-    transform: translateY(-12px) translateX(6px) scale(1.02);
+    transform: translateY(-6px);
     background:
-        radial-gradient(circle at top left, rgba(102, 126, 234, 0.12) 0%, transparent 60%),
+        radial-gradient(circle at top left, rgba(102, 126, 234, 0.06) 0%, transparent 70%),
         linear-gradient(135deg,
-            rgba(102, 126, 234, 0.1) 0%,
-            rgba(118, 75, 162, 0.15) 50%,
-            rgba(237, 66, 100, 0.1) 100%
+            rgba(255, 255, 255, 0.98) 0%,
+            rgba(248, 250, 252, 1) 100%
         );
     border-image: linear-gradient(135deg,
-        rgba(102, 126, 234, 0.4),
-        rgba(237, 66, 100, 0.3)
+        rgba(102, 126, 234, 0.3),
+        rgba(237, 66, 100, 0.25)
     ) 1;
     box-shadow:
-        0 25px 60px rgba(102, 126, 234, 0.18),
-        0 15px 35px rgba(237, 66, 100, 0.12),
-        0 0 0 1px rgba(255,255,255,0.9) inset,
-        0 15px 35px rgba(102, 126, 234, 0.08) inset;
+        0 15px 40px rgba(102, 126, 234, 0.1),
+        0 8px 20px rgba(0,0,0,0.04),
+        0 0 0 1px rgba(255,255,255,0.95) inset;
 }
 
 .meshimap-feature-icon {
-    font-size: 56px;
+    font-size: 48px;
     flex-shrink: 0;
     line-height: 1;
-    filter:
-        drop-shadow(0 4px 12px rgba(102, 126, 234, 0.25))
-        drop-shadow(0 2px 6px rgba(237, 66, 100, 0.15));
-    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    filter: drop-shadow(0 2px 8px rgba(102, 126, 234, 0.15));
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
-    animation: iconFloat 4s ease-in-out infinite;
-}
-
-@keyframes iconFloat {
-    0%, 100% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(-4px);
-    }
 }
 
 .meshimap-feature-item:hover .meshimap-feature-icon {
-    transform: scale(1.2) rotate(-8deg) translateY(-6px);
-    filter:
-        drop-shadow(0 10px 20px rgba(102, 126, 234, 0.4))
-        drop-shadow(0 5px 12px rgba(237, 66, 100, 0.25))
-        drop-shadow(0 0 30px rgba(102, 126, 234, 0.3));
-    animation: iconBounce 0.6s ease-in-out infinite;
-}
-
-@keyframes iconBounce {
-    0%, 100% {
-        transform: scale(1.2) rotate(-8deg) translateY(-6px);
-    }
-    50% {
-        transform: scale(1.25) rotate(-10deg) translateY(-10px);
-    }
+    transform: scale(1.1) rotate(-3deg);
+    filter: drop-shadow(0 4px 12px rgba(102, 126, 234, 0.25));
 }
 
 .meshimap-feature-text h3 {
-    font-size: 24px;
-    font-weight: 800;
-    color: #2c3e50;
-    margin-bottom: 14px;
-    background: linear-gradient(135deg,
-        #667eea 0%,
-        #764ba2 40%,
-        #ed4264 100%
-    );
-    background-size: 200% auto;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    letter-spacing: -0.02em;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 20px;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 10px;
+    letter-spacing: -0.01em;
+    transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
 }
 
 .meshimap-feature-item:hover .meshimap-feature-text h3 {
-    background-position: 100% center;
-    letter-spacing: 0em;
-    filter: drop-shadow(0 2px 8px rgba(102, 126, 234, 0.3));
+    color: #667eea;
 }
 
 .meshimap-feature-text p {
-    font-size: 16px;
+    font-size: 15px;
     line-height: 1.8;
     color: #4a5568;
     margin: 0;
     font-weight: 400;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.meshimap-feature-item:hover .meshimap-feature-text p {
-    color: #2d3748;
-    transform: translateX(2px);
+    letter-spacing: 0.01em;
 }
 
 /* エリア選択 */
