@@ -203,12 +203,75 @@ else
     log_warning "WordPress管理画面 → 設定 → パーマリンク → 「変更を保存」を実行してください。"
 fi
 
-# 11. クリーンアップ
+# 11. キャッシュクリア
+echo ""
+log_info "========== キャッシュクリア開始 =========="
+
+# 11-1. OPcacheのクリア
+log_info "OPcache をクリア中..."
+if command -v php &> /dev/null; then
+    php -r "if (function_exists('opcache_reset')) { opcache_reset(); echo 'OPcache cleared'; } else { echo 'OPcache not available'; }"
+    log_success "OPcache クリア完了"
+else
+    log_warning "PHP コマンドが見つかりません"
+fi
+
+# 11-2. WordPress Transientsのクリア
+if [ "$WP_CLI_AVAILABLE" = true ]; then
+    log_info "WordPress Transients をクリア中..."
+    cd "$DOCROOT"
+    wp transient delete --all --path="$DOCROOT" 2>/dev/null || log_warning "Transients削除でエラーが発生しました（無視して続行）"
+    log_success "WordPress Transients クリア完了"
+fi
+
+# 11-3. WordPress オブジェクトキャッシュのクリア
+if [ "$WP_CLI_AVAILABLE" = true ]; then
+    log_info "WordPress オブジェクトキャッシュ をクリア中..."
+    cd "$DOCROOT"
+    wp cache flush --path="$DOCROOT" 2>/dev/null || log_warning "キャッシュフラッシュでエラーが発生しました（無視して続行）"
+    log_success "WordPress オブジェクトキャッシュ クリア完了"
+fi
+
+# 11-4. KUSANAGIキャッシュのクリア（KUSANAGIの場合のみ）
+if command -v kusanagi &> /dev/null; then
+    log_info "KUSANAGI キャッシュ をクリア中..."
+    kusanagi clear fcache 2>/dev/null || log_warning "fcache クリアでエラー（無視して続行）"
+    kusanagi clear bcache 2>/dev/null || log_warning "bcache クリアでエラー（無視して続行）"
+    log_success "KUSANAGI キャッシュ クリア完了"
+else
+    log_info "KUSANAGI環境ではないため、KUSANAGIキャッシュクリアをスキップします"
+fi
+
+# 11-5. Nginxキャッシュのクリア（存在する場合）
+NGINX_CACHE_DIR="/var/cache/nginx"
+if [ -d "$NGINX_CACHE_DIR" ]; then
+    log_info "Nginx キャッシュ をクリア中..."
+    rm -rf ${NGINX_CACHE_DIR}/* 2>/dev/null || log_warning "Nginxキャッシュクリアでエラー（無視して続行）"
+    log_success "Nginx キャッシュ クリア完了"
+fi
+
+# 11-6. PHP-FPMの再起動（OPcacheを確実にクリアするため）
+log_info "PHP-FPM を再起動中..."
+if systemctl list-units --type=service | grep -q "php.*fpm"; then
+    PHP_FPM_SERVICE=$(systemctl list-units --type=service | grep "php.*fpm" | awk '{print $1}' | head -n 1)
+    if systemctl restart "$PHP_FPM_SERVICE" 2>/dev/null; then
+        log_success "PHP-FPM 再起動完了: $PHP_FPM_SERVICE"
+    else
+        log_warning "PHP-FPM の再起動に失敗しました（権限不足の可能性）"
+    fi
+else
+    log_warning "PHP-FPM サービスが見つかりません"
+fi
+
+log_success "========== キャッシュクリア完了 =========="
+echo ""
+
+# 12. クリーンアップ
 log_info "一時ファイルを削除中..."
 rm -rf "$TEMP_DIR"
 log_success "クリーンアップ完了"
 
-# 12. 完了メッセージ
+# 13. 完了メッセージ
 echo ""
 echo "=========================================="
 echo "  ✅ デプロイ完了！"
@@ -218,6 +281,11 @@ log_info "バージョン: v2.8.5"
 log_info "インストール先: $INSTALL_PATH"
 log_info "バックアップ: $BACKUP_DIR"
 echo ""
+log_success "実行された処理:"
+echo "  ✓ プラグインのインストールと有効化"
+echo "  ✓ パーマリンクの更新"
+echo "  ✓ 全キャッシュのクリア（OPcache、WordPress、KUSANAGI、Nginx、PHP-FPM）"
+echo ""
 log_success "新機能:"
 echo "  1. 人気のジャンル → サイト説明セクションに変更"
 echo "  2. エリアから探す → 掲載店舗エリアに変更"
@@ -226,7 +294,8 @@ echo ""
 log_warning "次のステップ:"
 echo "  1. WordPress管理画面 → トップページ設定 → 月間アクセス数を設定"
 echo "  2. サイトを確認して、正常に動作していることを確認"
-echo "  3. 問題がある場合は、バックアップから復元: $BACKUP_DIR"
+echo "  3. ブラウザのキャッシュもクリアすることをお勧めします（Ctrl+F5 または Cmd+Shift+R）"
+echo "  4. 問題がある場合は、バックアップから復元: $BACKUP_DIR"
 echo ""
 
 exit 0
