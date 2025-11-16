@@ -2,8 +2,8 @@
 /**
  * Plugin Name: Umaten トップページ
  * Plugin URI: https://umaten.jp
- * Description: 動的なカテゴリ・タグ表示を備えたトップページ用プラグイン。全エリア対応の3ステップナビゲーション（親→子カテゴリ→ジャンル）。SEO最適化・URLリライト完全修正（タグ・投稿判定改善）・ヒーロー画像メタデータ保存（SWELLテーマ完全対応）。検索結果ページ対応（モダンUI）。独自アクセスカウント機能搭載。投稿とタグの完全な区別。デバッグログ強化・エラーハンドリング改善。v2.10.3：/hokkaido/hakodate/ramen/ を検索ウィジェットURL（/?umaten_category=10&umaten_tag=426&umaten_search=1）に301リダイレクト。
- * Version: 2.10.3
+ * Description: 動的なカテゴリ・タグ表示を備えたトップページ用プラグイン。全エリア対応の3ステップナビゲーション（親→子カテゴリ→ジャンル）。SEO最適化・URLリライト完全修正（タグ・投稿判定改善）・ヒーロー画像メタデータ保存（SWELLテーマ完全対応）。検索結果ページ対応（モダンUI）。独自アクセスカウント機能搭載。投稿とタグの完全な区別。デバッグログ強化・エラーハンドリング改善。v2.10.4：HTMLの出力バッファを使用して、/hokkaido/hakodate/ramen/ へのすべてのリンクを検索ウィジェットURL（/?umaten_category=10&umaten_tag=426&umaten_search=1）に自動書き換え。
+ * Version: 2.10.4
  * Author: Umaten
  * Author URI: https://umaten.jp
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // プラグインの定数定義
-define('UMATEN_TOPPAGE_VERSION', '2.10.3');
+define('UMATEN_TOPPAGE_VERSION', '2.10.4');
 define('UMATEN_TOPPAGE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('UMATEN_TOPPAGE_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -106,6 +106,55 @@ class Umaten_Toppage_Plugin {
 
         // ヒーロー画像メタデータ保存の初期化
         Umaten_Toppage_Hero_Image::get_instance();
+
+        // 【v2.10.4 新機能】/hokkaido/hakodate/ramen/ へのリンクを検索ウィジェットURLに書き換え
+        add_action('wp_loaded', array($this, 'start_output_buffer'));
+    }
+
+    /**
+     * 【v2.10.4】出力バッファを開始して、HTMLのリンクを書き換える
+     */
+    public function start_output_buffer() {
+        // 管理画面、AJAX、REST APIでは実行しない
+        if (is_admin() || wp_doing_ajax() || (defined('REST_REQUEST') && REST_REQUEST)) {
+            return;
+        }
+
+        ob_start(array($this, 'replace_hakodate_ramen_links'));
+    }
+
+    /**
+     * 【v2.10.4】/hokkaido/hakodate/ramen/ へのリンクを検索ウィジェットURLに置換
+     *
+     * @param string $buffer 出力バッファの内容
+     * @return string 置換後の内容
+     */
+    public function replace_hakodate_ramen_links($buffer) {
+        // 函館カテゴリとramenタグのIDを取得
+        $hakodate_cat = get_term_by('slug', 'hakodate', 'category');
+        $ramen_tag = get_term_by('slug', 'ramen', 'post_tag');
+
+        if (!$hakodate_cat || !$ramen_tag) {
+            return $buffer;
+        }
+
+        // 検索ウィジェットのURL
+        $search_url = home_url('/?umaten_category=' . $hakodate_cat->term_id . '&umaten_tag=' . $ramen_tag->term_id . '&umaten_search=1');
+
+        // /hokkaido/hakodate/ramen/ へのリンクを置換
+        // 相対パスと絶対パス両方に対応
+        $patterns = array(
+            '/href=["\']https?:\/\/[^"\']*\/hokkaido\/hakodate\/ramen\/["\']/',
+            '/href=["\']\/?hokkaido\/hakodate\/ramen\/["\']/',
+        );
+
+        $replacement = 'href="' . esc_url($search_url) . '"';
+
+        foreach ($patterns as $pattern) {
+            $buffer = preg_replace($pattern, $replacement, $buffer);
+        }
+
+        return $buffer;
     }
 
     /**
