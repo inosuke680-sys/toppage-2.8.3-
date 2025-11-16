@@ -44,17 +44,32 @@
                 }
             });
 
-            // 子カテゴリカードのクリックイベント（委譲）
+            // 【v2.10.16】子カテゴリカードのクリックイベント（多階層対応）
             $(document).on('click', '.child-category-item', function(e) {
                 e.preventDefault();
-                console.log('子カテゴリがクリックされました:', $(this).data('child-slug'));
-                self.currentChildSlug = $(this).data('child-slug');
-                self.currentChildId = $(this).data('child-id');  // 【v2.10.11】カテゴリIDを保存
-                console.log('[v2.10.11] 子カテゴリID保存:', self.currentChildId);
-                self.closeModal('#child-category-modal');
-                setTimeout(function() {
-                    self.loadTags();
-                }, 300);
+                const childSlug = $(this).data('child-slug');
+                const childId = $(this).data('child-id');
+                const hasChildren = $(this).data('has-children') === '1' || $(this).data('has-children') === 1;
+
+                console.log('[v2.10.16] 子カテゴリがクリックされました:', childSlug, 'hasChildren:', hasChildren);
+
+                self.currentChildSlug = childSlug;
+                self.currentChildId = childId;
+
+                // 【v2.10.16】子カテゴリがある場合は再度子カテゴリを読み込み、ない場合はタグを表示
+                if (hasChildren) {
+                    console.log('[v2.10.16] さらに子カテゴリがあるため、次の階層を読み込みます');
+                    self.closeModal('#child-category-modal');
+                    setTimeout(function() {
+                        self.loadChildCategories(childSlug);
+                    }, 300);
+                } else {
+                    console.log('[v2.10.16] 最終階層のため、ジャンル選択へ');
+                    self.closeModal('#child-category-modal');
+                    setTimeout(function() {
+                        self.loadTags();
+                    }, 300);
+                }
             });
         },
 
@@ -264,17 +279,20 @@
             $grid.removeClass('meshimap-category-grid').addClass('meshimap-tags-grid');
 
             $.each(categories, function(index, category) {
+                // 【v2.10.16】子カテゴリの有無に応じてアイコンを変更
+                const icon = category.has_children ? '📂' : '📍';
                 const $item = $('<a>')
                     .attr('href', '#')
                     .addClass('meshimap-tag-item child-category-item')
                     .attr('data-child-slug', category.slug)
-                    .attr('data-child-id', category.id)  // 【v2.10.11】カテゴリIDを保存
-                    .html(`📍 ${category.name}`);
+                    .attr('data-child-id', category.id)
+                    .attr('data-has-children', category.has_children ? '1' : '0')  // 【v2.10.16】子カテゴリの有無
+                    .html(`${icon} ${category.name}`);
 
                 $grid.append($item);
             });
 
-            console.log('子カテゴリを', categories.length, '件レンダリングしました');
+            console.log('[v2.10.16] 子カテゴリを', categories.length, '件レンダリングしました');
         },
 
         /**

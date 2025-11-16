@@ -43,7 +43,7 @@ class Umaten_Toppage_Ajax_Handler {
     }
 
     /**
-     * 子カテゴリを取得
+     * 【v2.10.16】子カテゴリを取得（地域ベースと従来の親子カテゴリの両方に対応）
      */
     public function get_child_categories() {
         check_ajax_referer('umaten_toppage_nonce', 'nonce');
@@ -55,56 +55,85 @@ class Umaten_Toppage_Ajax_Handler {
             return;
         }
 
-        // 【v2.10.15】デバッグ：親カテゴリスラッグをログ出力
+        // 【v2.10.16】デバッグ：親カテゴリスラッグをログ出力
         if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log("Umaten Toppage v2.10.15: Searching for parent category with slug: {$parent_slug}");
+            error_log("Umaten Toppage v2.10.16: Searching for categories with parent_slug: {$parent_slug}");
         }
 
-        // 親カテゴリを取得
-        $parent_category = get_category_by_slug($parent_slug);
+        // 【v2.10.16】地域設定から該当地域のカテゴリリストを取得
+        $area_settings = get_option('umaten_toppage_area_settings', array());
+        $parent_name = '';
+        $child_categories = array();
 
-        if (!$parent_category) {
-            // 【v2.10.15】デバッグ：親カテゴリが見つからない場合、全カテゴリをログ出力
+        // 地域スラッグかどうかをチェック
+        if (isset($area_settings[$parent_slug]) && isset($area_settings[$parent_slug]['categories'])) {
+            // 地域ベースの場合：設定から都道府県カテゴリスラッグを取得
+            $category_slugs = $area_settings[$parent_slug]['categories'];
+            $parent_name = $area_settings[$parent_slug]['label'];
+
             if (defined('WP_DEBUG') && WP_DEBUG) {
-                $all_categories = get_categories(array('hide_empty' => false));
-                $cat_slugs = array_map(function($cat) {
-                    return $cat->slug;
-                }, $all_categories);
-                error_log("Umaten Toppage v2.10.15: Parent category '{$parent_slug}' not found. Available category slugs: " . implode(', ', $cat_slugs));
+                error_log("Umaten Toppage v2.10.16: Region '{$parent_slug}' found with " . count($category_slugs) . " category slugs: " . implode(', ', $category_slugs));
             }
-            wp_send_json_error(array(
-                'message' => "親カテゴリ「{$parent_slug}」が見つかりません。WordPressでカテゴリを作成してください。"
+
+            // 各カテゴリスラッグからカテゴリ情報を取得
+            foreach ($category_slugs as $cat_slug) {
+                $category = get_category_by_slug($cat_slug);
+                if ($category) {
+                    $child_categories[] = $category;
+                } else {
+                    if (defined('WP_DEBUG') && WP_DEBUG) {
+                        error_log("Umaten Toppage v2.10.16: Category '{$cat_slug}' not found in WordPress");
+                    }
+                }
+            }
+        } else {
+            // 従来の親子カテゴリ方式の場合
+            $parent_category = get_category_by_slug($parent_slug);
+
+            if (!$parent_category) {
+                // デバッグ：親カテゴリが見つからない場合
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    $all_categories = get_categories(array('hide_empty' => false));
+                    $cat_slugs = array_map(function($cat) {
+                        return $cat->slug;
+                    }, $all_categories);
+                    error_log("Umaten Toppage v2.10.16: Parent category '{$parent_slug}' not found. Available category slugs: " . implode(', ', $cat_slugs));
+                }
+                wp_send_json_error(array(
+                    'message' => "親カテゴリ「{$parent_slug}」が見つかりません。WordPressでカテゴリを作成してください。"
+                ));
+                return;
+            }
+
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log("Umaten Toppage v2.10.16: Found parent category: {$parent_category->name} (ID: {$parent_category->term_id})");
+            }
+
+            $parent_name = $parent_category->name;
+
+            // 子カテゴリを取得
+            $child_categories = get_categories(array(
+                'parent' => $parent_category->term_id,
+                'hide_empty' => false,
+                'orderby' => 'name',
+                'order' => 'ASC'
             ));
-            return;
         }
 
-        // 【v2.10.15】デバッグ：親カテゴリ発見
+        // デバッグ：取得結果
         if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log("Umaten Toppage v2.10.15: Found parent category: {$parent_category->name} (ID: {$parent_category->term_id})");
-        }
-
-        // 子カテゴリを取得
-        $child_categories = get_categories(array(
-            'parent' => $parent_category->term_id,
-            'hide_empty' => false,
-            'orderby' => 'name',
-            'order' => 'ASC'
-        ));
-
-        // 【v2.10.15】デバッグ：子カテゴリ取得結果
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log("Umaten Toppage v2.10.15: Found " . count($child_categories) . " child categories for parent '{$parent_category->name}'");
+            error_log("Umaten Toppage v2.10.16: Found " . count($child_categories) . " child categories for '{$parent_name}'");
             if (!empty($child_categories)) {
                 $child_names = array_map(function($cat) {
                     return $cat->name . ' (' . $cat->slug . ')';
                 }, $child_categories);
-                error_log("Umaten Toppage v2.10.15: Child categories: " . implode(', ', $child_names));
+                error_log("Umaten Toppage v2.10.16: Child categories: " . implode(', ', $child_names));
             }
         }
 
         if (empty($child_categories)) {
             wp_send_json_error(array(
-                'message' => "「{$parent_category->name}」の子カテゴリが見つかりません。WordPressで「{$parent_category->name}」の子カテゴリを作成してください。"
+                'message' => "「{$parent_name}」の子カテゴリが見つかりません。WordPressで「{$parent_name}」の子カテゴリを作成してください。"
             ));
             return;
         }
@@ -124,19 +153,31 @@ class Umaten_Toppage_Ajax_Handler {
                 $thumbnail_url = 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800';
             }
 
+            // 【v2.10.16】子カテゴリの有無をチェック
+            $has_children = false;
+            $children_count = get_categories(array(
+                'parent' => $category->term_id,
+                'hide_empty' => false,
+                'count' => true
+            ));
+            if (!empty($children_count)) {
+                $has_children = true;
+            }
+
             $categories_data[] = array(
                 'id' => $category->term_id,
                 'name' => $category->name,
                 'slug' => $category->slug,
                 'description' => $category->description,
                 'count' => $category->count,
-                'thumbnail' => $thumbnail_url
+                'thumbnail' => $thumbnail_url,
+                'has_children' => $has_children  // 【v2.10.16】子カテゴリの有無
             );
         }
 
         wp_send_json_success(array(
             'categories' => $categories_data,
-            'parent_name' => $parent_category->name
+            'parent_name' => $parent_name
         ));
     }
 
