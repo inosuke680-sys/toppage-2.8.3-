@@ -55,12 +55,32 @@ class Umaten_Toppage_Ajax_Handler {
             return;
         }
 
+        // 【v2.10.15】デバッグ：親カテゴリスラッグをログ出力
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log("Umaten Toppage v2.10.15: Searching for parent category with slug: {$parent_slug}");
+        }
+
         // 親カテゴリを取得
         $parent_category = get_category_by_slug($parent_slug);
 
         if (!$parent_category) {
-            wp_send_json_error(array('message' => '親カテゴリが見つかりません。'));
+            // 【v2.10.15】デバッグ：親カテゴリが見つからない場合、全カテゴリをログ出力
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                $all_categories = get_categories(array('hide_empty' => false));
+                $cat_slugs = array_map(function($cat) {
+                    return $cat->slug;
+                }, $all_categories);
+                error_log("Umaten Toppage v2.10.15: Parent category '{$parent_slug}' not found. Available category slugs: " . implode(', ', $cat_slugs));
+            }
+            wp_send_json_error(array(
+                'message' => "親カテゴリ「{$parent_slug}」が見つかりません。WordPressでカテゴリを作成してください。"
+            ));
             return;
+        }
+
+        // 【v2.10.15】デバッグ：親カテゴリ発見
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log("Umaten Toppage v2.10.15: Found parent category: {$parent_category->name} (ID: {$parent_category->term_id})");
         }
 
         // 子カテゴリを取得
@@ -71,8 +91,21 @@ class Umaten_Toppage_Ajax_Handler {
             'order' => 'ASC'
         ));
 
+        // 【v2.10.15】デバッグ：子カテゴリ取得結果
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log("Umaten Toppage v2.10.15: Found " . count($child_categories) . " child categories for parent '{$parent_category->name}'");
+            if (!empty($child_categories)) {
+                $child_names = array_map(function($cat) {
+                    return $cat->name . ' (' . $cat->slug . ')';
+                }, $child_categories);
+                error_log("Umaten Toppage v2.10.15: Child categories: " . implode(', ', $child_names));
+            }
+        }
+
         if (empty($child_categories)) {
-            wp_send_json_error(array('message' => '子カテゴリが見つかりません。'));
+            wp_send_json_error(array(
+                'message' => "「{$parent_category->name}」の子カテゴリが見つかりません。WordPressで「{$parent_category->name}」の子カテゴリを作成してください。"
+            ));
             return;
         }
 
