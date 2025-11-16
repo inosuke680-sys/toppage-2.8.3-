@@ -2,8 +2,8 @@
 /**
  * Plugin Name: Umaten トップページ
  * Plugin URI: https://umaten.jp
- * Description: 動的なカテゴリ・タグ表示を備えたトップページ用プラグイン。全エリア対応の3ステップナビゲーション（親→子カテゴリ→ジャンル）。SEO最適化・URLリライト完全修正（タグ・投稿判定改善）・ヒーロー画像メタデータ保存（SWELLテーマ完全対応）。検索結果ページ対応（モダンUI）。独自アクセスカウント機能搭載。投稿とタグの完全な区別。デバッグログ強化・エラーハンドリング改善。v2.10.4：HTMLの出力バッファを使用して、/hokkaido/hakodate/ramen/ へのすべてのリンクを検索ウィジェットURL（/?umaten_category=10&umaten_tag=426&umaten_search=1）に自動書き換え。
- * Version: 2.10.4
+ * Description: 動的なカテゴリ・タグ表示を備えたトップページ用プラグイン。全エリア対応の3ステップナビゲーション（親→子カテゴリ→ジャンル）。SEO最適化・URLリライト完全修正（タグ・投稿判定改善）・ヒーロー画像メタデータ保存（SWELLテーマ完全対応）。検索結果ページ対応（モダンUI）。独自アクセスカウント機能搭載。投稿とタグの完全な区別。デバッグログ強化・エラーハンドリング改善。v2.10.5：リンク書き換えをトレーリングスラッシュあり・なし両方に対応。地域選択ナビゲーションからのリンクも正しく書き換え。
+ * Version: 2.10.5
  * Author: Umaten
  * Author URI: https://umaten.jp
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // プラグインの定数定義
-define('UMATEN_TOPPAGE_VERSION', '2.10.4');
+define('UMATEN_TOPPAGE_VERSION', '2.10.5');
 define('UMATEN_TOPPAGE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('UMATEN_TOPPAGE_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -124,7 +124,8 @@ class Umaten_Toppage_Plugin {
     }
 
     /**
-     * 【v2.10.4】/hokkaido/hakodate/ramen/ へのリンクを検索ウィジェットURLに置換
+     * 【v2.10.5】/hokkaido/hakodate/ramen/ へのリンクを検索ウィジェットURLに置換
+     * トレーリングスラッシュあり・なし両方に対応
      *
      * @param string $buffer 出力バッファの内容
      * @return string 置換後の内容
@@ -141,11 +142,11 @@ class Umaten_Toppage_Plugin {
         // 検索ウィジェットのURL
         $search_url = home_url('/?umaten_category=' . $hakodate_cat->term_id . '&umaten_tag=' . $ramen_tag->term_id . '&umaten_search=1');
 
-        // /hokkaido/hakodate/ramen/ へのリンクを置換
-        // 相対パスと絶対パス両方に対応
+        // /hokkaido/hakodate/ramen または /hokkaido/hakodate/ramen/ へのリンクを置換
+        // トレーリングスラッシュあり・なし両方に対応
         $patterns = array(
-            '/href=["\']https?:\/\/[^"\']*\/hokkaido\/hakodate\/ramen\/["\']/',
-            '/href=["\']\/?hokkaido\/hakodate\/ramen\/["\']/',
+            '/href=["\']https?:\/\/[^"\']*\/hokkaido\/hakodate\/ramen\/?["\']/',
+            '/href=["\']\/?hokkaido\/hakodate\/ramen\/?["\']/',
         );
 
         $replacement = 'href="' . esc_url($search_url) . '"';
