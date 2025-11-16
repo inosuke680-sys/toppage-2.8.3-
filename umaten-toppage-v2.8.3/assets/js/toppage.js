@@ -49,6 +49,8 @@
                 e.preventDefault();
                 console.log('子カテゴリがクリックされました:', $(this).data('child-slug'));
                 self.currentChildSlug = $(this).data('child-slug');
+                self.currentChildId = $(this).data('child-id');  // 【v2.10.11】カテゴリIDを保存
+                console.log('[v2.10.11] 子カテゴリID保存:', self.currentChildId);
                 self.closeModal('#child-category-modal');
                 setTimeout(function() {
                     self.loadTags();
@@ -266,6 +268,7 @@
                     .attr('href', '#')
                     .addClass('meshimap-tag-item child-category-item')
                     .attr('data-child-slug', category.slug)
+                    .attr('data-child-id', category.id)  // 【v2.10.11】カテゴリIDを保存
                     .html(`📍 ${category.name}`);
 
                 $grid.append($item);
@@ -364,19 +367,24 @@
 
             // 各ジャンルを追加
             $.each(tags, function(index, tag) {
-                // 【v2.10.6】トレーリングスラッシュなしのURLを生成（v2.10.4のリンク書き換えと整合性を保つ）
-                const tagUrl = umatenToppage.siteUrl + '/' + self.currentParentSlug + '/' + self.currentChildSlug + '/' + tag.slug;
-                console.log('[v2.10.6] Tag URL generated (no trailing slash):', tag.name, '->', tagUrl);
+                // 【v2.10.11】検索ウィジェットURLを直接生成（rewrite rulesに依存しない確実な方法）
+                // umaten_category (子カテゴリID) + umaten_tag (タグID) で検索URLを構築
+                const searchUrl = umatenToppage.siteUrl + '/?umaten_category=' + self.currentChildId +
+                                  '&umaten_tag=' + tag.id +
+                                  '&umaten_search=1' +
+                                  '&umaten_search_nonce=' + umatenToppage.searchNonce;
+
+                console.log('[v2.10.11] 検索URL生成:', tag.name, '(カテゴリID:', self.currentChildId, ', タグID:', tag.id, ') ->', searchUrl);
 
                 const $tagItem = $('<a>')
-                    .attr('href', tagUrl)
+                    .attr('href', searchUrl)
                     .addClass('meshimap-tag-item')
                     .text(tag.name)
-                    .attr('data-tag-slug', tag.slug)
-                    .attr('data-full-url', tagUrl);
+                    .attr('data-tag-id', tag.id)
+                    .attr('data-tag-slug', tag.slug);
 
                 $tagItem.on('click', function(e) {
-                    console.log('[v2.9.0] タグクリック:', tag.name, ', URL:', tagUrl);
+                    console.log('[v2.10.11] タグクリック:', tag.name, ', 検索URL:', searchUrl);
                     // デフォルトのリンク動作を許可（href属性で遷移）
                 });
 

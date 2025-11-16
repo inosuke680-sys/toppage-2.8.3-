@@ -58,7 +58,8 @@ class Umaten_Toppage_Shortcode {
         wp_localize_script('umaten-toppage-script', 'umatenToppage', array(
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('umaten_toppage_nonce'),
-            'siteUrl' => home_url()
+            'siteUrl' => home_url(),
+            'searchNonce' => wp_create_nonce('umaten_search_action')  // 【v2.10.11】検索ウィジェット用nonce
         ));
     }
 
