@@ -379,14 +379,16 @@
                     return; // このタグをスキップ
                 }
 
-                // 【v2.10.11】検索ウィジェットURLを直接生成（rewrite rulesに依存しない確実な方法）
+                // 【v2.10.13】検索ウィジェットURLを直接生成（rewrite rulesに依存しない確実な方法）
                 // umaten_category (子カテゴリID) + umaten_tag (タグID) で検索URLを構築
+                // 【重要】umaten_keyword= パラメータを追加（空でも必須）
                 const searchUrl = umatenToppage.siteUrl + '/?umaten_category=' + self.currentChildId +
                                   '&umaten_tag=' + tag.id +
+                                  '&umaten_keyword=' +
                                   '&umaten_search=1' +
                                   '&umaten_search_nonce=' + umatenToppage.searchNonce;
 
-                console.log('[v2.10.11] 検索URL生成:', tag.name, '(カテゴリID:', self.currentChildId, ', タグID:', tag.id, ') ->', searchUrl);
+                console.log('[v2.10.13] 検索URL生成:', tag.name, '(カテゴリID:', self.currentChildId, ', タグID:', tag.id, ') ->', searchUrl);
 
                 const $tagItem = $('<a>')
                     .attr('href', searchUrl)
