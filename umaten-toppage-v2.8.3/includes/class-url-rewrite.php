@@ -139,7 +139,7 @@ class Umaten_Toppage_URL_Rewrite {
                 }
             }
 
-            // 3セグメントURL: /region/area/genre/ または /parent-cat/child-cat/post-slug/
+            // 3セグメントURL: /region/area/genre/ または /parent-cat/child-cat/post-slug/ または /parent-cat/child-cat/tag/
             if ($umaten_region && $umaten_area && $umaten_genre) {
                 // umaten_genre が投稿スラッグかチェック
                 $post = $this->find_post_by_slug($umaten_genre);
@@ -158,7 +158,7 @@ class Umaten_Toppage_URL_Rewrite {
                         $query->set('umaten_genre', '');
 
                         if (defined('WP_DEBUG') && WP_DEBUG) {
-                            error_log("Umaten Toppage v2.10.0: Detected post URL with hierarchy misidentified as widget vars. Converting umaten_region={$umaten_region}, umaten_area={$umaten_area}, umaten_genre={$umaten_genre} → category_name={$umaten_region}/{$umaten_area}, name={$umaten_genre} (Post ID: {$post->ID})");
+                            error_log("Umaten Toppage v2.10.1: Detected post URL with hierarchy misidentified as widget vars. Converting umaten_region={$umaten_region}, umaten_area={$umaten_area}, umaten_genre={$umaten_genre} → category_name={$umaten_region}/{$umaten_area}, name={$umaten_genre} (Post ID: {$post->ID})");
                         }
                         return;
                     } else if ($parent_cat || $child_cat) {
@@ -174,9 +174,44 @@ class Umaten_Toppage_URL_Rewrite {
                         $query->set('umaten_genre', '');
 
                         if (defined('WP_DEBUG') && WP_DEBUG) {
-                            error_log("Umaten Toppage v2.10.0: Detected post URL misidentified as widget vars. Converting → category_name={$category_path}, name={$umaten_genre} (Post ID: {$post->ID})");
+                            error_log("Umaten Toppage v2.10.1: Detected post URL misidentified as widget vars. Converting → category_name={$category_path}, name={$umaten_genre} (Post ID: {$post->ID})");
                         }
                         return;
+                    }
+                } else {
+                    // 【v2.10.1 新規追加】投稿でない場合、タグかチェック
+                    // これにより /hokkaido/hakodate/ramen/ のようなカテゴリ+タグURLを正しく処理
+                    $tag = get_term_by('slug', $umaten_genre, 'post_tag');
+                    if ($tag) {
+                        // umaten_region と umaten_area がカテゴリかチェック
+                        $parent_cat = get_term_by('slug', $umaten_region, 'category');
+                        $child_cat = get_term_by('slug', $umaten_area, 'category');
+
+                        if ($child_cat) {
+                            // カテゴリ+タグのアーカイブページとして処理
+                            // WordPressの標準クエリ変数に変換
+                            $category_path = '';
+
+                            // 親子関係をチェック
+                            if ($parent_cat && $child_cat->parent == $parent_cat->term_id) {
+                                // 正しい階層: /parent/child/tag/
+                                $category_path = $umaten_region . '/' . $umaten_area;
+                            } else {
+                                // 子カテゴリのみ使用: /child/tag/
+                                $category_path = $umaten_area;
+                            }
+
+                            $query->set('category_name', $category_path);
+                            $query->set('tag', $umaten_genre);
+                            $query->set('umaten_region', '');
+                            $query->set('umaten_area', '');
+                            $query->set('umaten_genre', '');
+
+                            if (defined('WP_DEBUG') && WP_DEBUG) {
+                                error_log("Umaten Toppage v2.10.1: Detected category+tag URL misidentified as widget vars. Converting umaten_region={$umaten_region}, umaten_area={$umaten_area}, umaten_genre={$umaten_genre} → category_name={$category_path}, tag={$umaten_genre} (Tag ID: {$tag->term_id}, Tag Name: '{$tag->name}')");
+                            }
+                            return;
+                        }
                     }
                 }
             }
