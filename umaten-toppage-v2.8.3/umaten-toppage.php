@@ -2,8 +2,8 @@
 /**
  * Plugin Name: Umaten トップページ
  * Plugin URI: https://umaten.jp
- * Description: 動的なカテゴリ・タグ表示を備えたトップページ用プラグイン。全エリア対応の3ステップナビゲーション（親→子カテゴリ→ジャンル）。SEO最適化・URLリライト完全修正（タグ・投稿判定改善）・ヒーロー画像メタデータ保存（SWELLテーマ完全対応）。検索結果ページ対応（モダンUI）。独自アクセスカウント機能搭載。投稿とタグの完全な区別。デバッグログ強化・エラーハンドリング改善。v2.10.6：ジャンル選択モーダルのURLをトレーリングスラッシュなしに修正（/hokkaido/hakodate/ramenなど）、v2.10.4のリンク書き換えロジックと整合性を確保。
- * Version: 2.10.6
+ * Description: 動的なカテゴリ・タグ表示を備えたトップページ用プラグイン。全エリア対応の3ステップナビゲーション（親→子カテゴリ→ジャンル）。SEO最適化・URLリライト完全修正（タグ・投稿判定改善）・ヒーロー画像メタデータ保存（SWELLテーマ完全対応）。検索結果ページ対応（モダンUI）。独自アクセスカウント機能搭載。投稿とタグの完全な区別。デバッグログ強化・エラーハンドリング改善。v2.10.8：検索ウィジェットプラグインのnonce検証に対応（正しいnonce名 'umaten_search_action' を使用）。XML Sitemap Generator併用時の403エラーを解決。
+ * Version: 2.10.8
  * Author: Umaten
  * Author URI: https://umaten.jp
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // プラグインの定数定義
-define('UMATEN_TOPPAGE_VERSION', '2.10.6');
+define('UMATEN_TOPPAGE_VERSION', '2.10.8');
 define('UMATEN_TOPPAGE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('UMATEN_TOPPAGE_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -124,8 +124,9 @@ class Umaten_Toppage_Plugin {
     }
 
     /**
-     * 【v2.10.5】/hokkaido/hakodate/ramen/ へのリンクを検索ウィジェットURLに置換
+     * 【v2.10.8】/hokkaido/hakodate/ramen/ へのリンクを検索ウィジェットURLに置換
      * トレーリングスラッシュあり・なし両方に対応
+     * 検索ウィジェットプラグインのnonce検証に対応（正しいnonce名 'umaten_search_action' を使用）
      *
      * @param string $buffer 出力バッファの内容
      * @return string 置換後の内容
@@ -139,8 +140,12 @@ class Umaten_Toppage_Plugin {
             return $buffer;
         }
 
-        // 検索ウィジェットのURL
-        $search_url = home_url('/?umaten_category=' . $hakodate_cat->term_id . '&umaten_tag=' . $ramen_tag->term_id . '&umaten_search=1');
+        // nonceを生成（検索ウィジェットプラグインのnonce検証用）
+        // 重要: 検索ウィジェット側は 'umaten_search_action' という名前で検証している
+        $nonce = wp_create_nonce('umaten_search_action');
+
+        // 検索ウィジェットのURL（nonceを含める）
+        $search_url = home_url('/?umaten_category=' . $hakodate_cat->term_id . '&umaten_tag=' . $ramen_tag->term_id . '&umaten_search=1&umaten_search_nonce=' . $nonce);
 
         // /hokkaido/hakodate/ramen または /hokkaido/hakodate/ramen/ へのリンクを置換
         // トレーリングスラッシュあり・なし両方に対応
