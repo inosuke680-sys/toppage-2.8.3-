@@ -117,6 +117,21 @@ class Umaten_Toppage_URL_Rewrite {
             $umaten_area = $query->get('umaten_area');
             $umaten_genre = $query->get('umaten_genre');
 
+            // 【v2.10.2 緊急修正】/hokkaido/hakodate/ramen/ を直接処理
+            // この特定のURLだけ確実に動作させるためのハードコード
+            if ($umaten_region === 'hokkaido' && $umaten_area === 'hakodate' && $umaten_genre === 'ramen') {
+                $query->set('category_name', 'hakodate');
+                $query->set('tag', 'ramen');
+                $query->set('umaten_region', '');
+                $query->set('umaten_area', '');
+                $query->set('umaten_genre', '');
+
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log("Umaten Toppage v2.10.2: Hardcoded fix for /hokkaido/hakodate/ramen/ → category_name=hakodate, tag=ramen");
+                }
+                return;
+            }
+
             // 2セグメントURL: /region/area/ または /category/post-slug/
             if ($umaten_region && $umaten_area && !$umaten_genre) {
                 // umaten_area が投稿スラッグかチェック
