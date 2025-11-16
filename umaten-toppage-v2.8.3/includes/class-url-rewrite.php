@@ -70,6 +70,11 @@ class Umaten_Toppage_URL_Rewrite {
      * @param WP_Query $query クエリオブジェクト
      */
     public function handle_plugin_conflicts($query) {
+        // 【v2.10.10】診断ログ：parse_queryが呼ばれていることを確認
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log("Umaten Toppage v2.10.10: parse_query hook called - Version: " . UMATEN_TOPPAGE_VERSION);
+        }
+
         // メインクエリかつフロントエンドリクエストのみ処理
         if (!$query->is_main_query() || !$this->is_frontend_request()) {
             return;
@@ -89,6 +94,19 @@ class Umaten_Toppage_URL_Rewrite {
             $query->get('rrct_tag') ||
             $query->get('rrct_active')
         );
+
+        // 【v2.10.10】診断ログ：検出されたクエリ変数
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            if ($has_search_widget_vars) {
+                error_log("Umaten Toppage v2.10.10: Search widget vars detected - region=" . $query->get('umaten_region') . ", area=" . $query->get('umaten_area') . ", genre=" . $query->get('umaten_genre'));
+            }
+            if ($has_rrct_vars) {
+                error_log("Umaten Toppage v2.10.10: RRCT vars detected");
+            }
+            if (!$has_search_widget_vars && !$has_rrct_vars) {
+                error_log("Umaten Toppage v2.10.10: No plugin query vars detected - skipping");
+            }
+        }
 
         // どちらのプラグインのクエリ変数も設定されていない場合は何もしない
         if (!$has_search_widget_vars && !$has_rrct_vars) {
@@ -141,12 +159,26 @@ class Umaten_Toppage_URL_Rewrite {
 
             // 3セグメントURL: /region/area/genre/ または /parent-cat/child-cat/post-slug/ または /parent-cat/child-cat/tag/
             if ($umaten_region && $umaten_area && $umaten_genre) {
+                // 【v2.10.10】診断ログ：3セグメントURL処理開始
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log("Umaten Toppage v2.10.10: Processing 3-segment URL - region={$umaten_region}, area={$umaten_area}, genre={$umaten_genre}");
+                }
+
                 // 【v2.10.9 改善】まずタグかどうかをチェック（投稿チェックより優先）
                 // これにより、すべてのカテゴリ+タグの組み合わせを検索ウィジェットURLにリダイレクト
                 $tag = get_term_by('slug', $umaten_genre, 'post_tag');
+
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log("Umaten Toppage v2.10.10: Tag check for '{$umaten_genre}' - " . ($tag ? "FOUND (ID: {$tag->term_id}, Name: {$tag->name})" : "NOT FOUND"));
+                }
+
                 if ($tag) {
                     // umaten_area がカテゴリかチェック
                     $child_cat = get_term_by('slug', $umaten_area, 'category');
+
+                    if (defined('WP_DEBUG') && WP_DEBUG) {
+                        error_log("Umaten Toppage v2.10.10: Category check for '{$umaten_area}' - " . ($child_cat ? "FOUND (ID: {$child_cat->term_id}, Name: {$child_cat->name})" : "NOT FOUND"));
+                    }
 
                     if ($child_cat) {
                         // カテゴリ+タグの組み合わせ → 検索ウィジェットURLにリダイレクト
@@ -157,7 +189,7 @@ class Umaten_Toppage_URL_Rewrite {
                         $redirect_url = home_url('/?umaten_category=' . $child_cat->term_id . '&umaten_tag=' . $tag->term_id . '&umaten_search=1&umaten_search_nonce=' . $nonce);
 
                         if (defined('WP_DEBUG') && WP_DEBUG) {
-                            error_log("Umaten Toppage v2.10.9: Redirecting /{$umaten_region}/{$umaten_area}/{$umaten_genre}/ to search widget URL (Category: {$child_cat->name}, Tag: {$tag->name}): {$redirect_url}");
+                            error_log("Umaten Toppage v2.10.10: REDIRECTING /{$umaten_region}/{$umaten_area}/{$umaten_genre}/ to search widget URL (Category: {$child_cat->name}, Tag: {$tag->name}): {$redirect_url}");
                         }
 
                         wp_redirect($redirect_url, 301);
