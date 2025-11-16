@@ -117,31 +117,6 @@ class Umaten_Toppage_URL_Rewrite {
             $umaten_area = $query->get('umaten_area');
             $umaten_genre = $query->get('umaten_genre');
 
-            // 【v2.10.8 修正】/hokkaido/hakodate/ramen/ を検索ウィジェットURLにリダイレクト
-            // ユーザーの要望: このURLを /?umaten_category=10&umaten_tag=426&umaten_search=1 にリダイレクト
-            // 修正: 検索ウィジェットプラグインのnonce検証に対応（正しいnonce名 'umaten_search_action' を使用）
-            if ($umaten_region === 'hokkaido' && $umaten_area === 'hakodate' && $umaten_genre === 'ramen') {
-                // カテゴリとタグのIDを動的に取得（より安全）
-                $hakodate_cat = get_term_by('slug', 'hakodate', 'category');
-                $ramen_tag = get_term_by('slug', 'ramen', 'post_tag');
-
-                if ($hakodate_cat && $ramen_tag) {
-                    // nonceを生成（検索ウィジェットプラグインのnonce検証用）
-                    // 重要: 検索ウィジェット側は 'umaten_search_action' という名前で検証している
-                    $nonce = wp_create_nonce('umaten_search_action');
-
-                    // 検索ウィジェットのURLにリダイレクト（nonceを含める）
-                    $redirect_url = home_url('/?umaten_category=' . $hakodate_cat->term_id . '&umaten_tag=' . $ramen_tag->term_id . '&umaten_search=1&umaten_search_nonce=' . $nonce);
-
-                    if (defined('WP_DEBUG') && WP_DEBUG) {
-                        error_log("Umaten Toppage v2.10.8: Redirecting /hokkaido/hakodate/ramen/ to search widget URL with nonce: {$redirect_url}");
-                    }
-
-                    wp_redirect($redirect_url, 301);
-                    exit;
-                }
-            }
-
             // 2セグメントURL: /region/area/ または /category/post-slug/
             if ($umaten_region && $umaten_area && !$umaten_genre) {
                 // umaten_area が投稿スラッグかチェック
@@ -166,7 +141,31 @@ class Umaten_Toppage_URL_Rewrite {
 
             // 3セグメントURL: /region/area/genre/ または /parent-cat/child-cat/post-slug/ または /parent-cat/child-cat/tag/
             if ($umaten_region && $umaten_area && $umaten_genre) {
-                // umaten_genre が投稿スラッグかチェック
+                // 【v2.10.9 改善】まずタグかどうかをチェック（投稿チェックより優先）
+                // これにより、すべてのカテゴリ+タグの組み合わせを検索ウィジェットURLにリダイレクト
+                $tag = get_term_by('slug', $umaten_genre, 'post_tag');
+                if ($tag) {
+                    // umaten_area がカテゴリかチェック
+                    $child_cat = get_term_by('slug', $umaten_area, 'category');
+
+                    if ($child_cat) {
+                        // カテゴリ+タグの組み合わせ → 検索ウィジェットURLにリダイレクト
+                        // nonceを生成（検索ウィジェットプラグインのnonce検証用）
+                        $nonce = wp_create_nonce('umaten_search_action');
+
+                        // 検索ウィジェットのURLにリダイレクト（nonceを含める）
+                        $redirect_url = home_url('/?umaten_category=' . $child_cat->term_id . '&umaten_tag=' . $tag->term_id . '&umaten_search=1&umaten_search_nonce=' . $nonce);
+
+                        if (defined('WP_DEBUG') && WP_DEBUG) {
+                            error_log("Umaten Toppage v2.10.9: Redirecting /{$umaten_region}/{$umaten_area}/{$umaten_genre}/ to search widget URL (Category: {$child_cat->name}, Tag: {$tag->name}): {$redirect_url}");
+                        }
+
+                        wp_redirect($redirect_url, 301);
+                        exit;
+                    }
+                }
+
+                // タグでない場合のみ、投稿スラッグかチェック
                 $post = $this->find_post_by_slug($umaten_genre);
                 if ($post) {
                     // これは /parent-category/child-category/post-slug/ のパターンの可能性
@@ -203,42 +202,8 @@ class Umaten_Toppage_URL_Rewrite {
                         }
                         return;
                     }
-                } else {
-                    // 【v2.10.1 新規追加】投稿でない場合、タグかチェック
-                    // これにより /hokkaido/hakodate/ramen/ のようなカテゴリ+タグURLを正しく処理
-                    $tag = get_term_by('slug', $umaten_genre, 'post_tag');
-                    if ($tag) {
-                        // umaten_region と umaten_area がカテゴリかチェック
-                        $parent_cat = get_term_by('slug', $umaten_region, 'category');
-                        $child_cat = get_term_by('slug', $umaten_area, 'category');
-
-                        if ($child_cat) {
-                            // カテゴリ+タグのアーカイブページとして処理
-                            // WordPressの標準クエリ変数に変換
-                            $category_path = '';
-
-                            // 親子関係をチェック
-                            if ($parent_cat && $child_cat->parent == $parent_cat->term_id) {
-                                // 正しい階層: /parent/child/tag/
-                                $category_path = $umaten_region . '/' . $umaten_area;
-                            } else {
-                                // 子カテゴリのみ使用: /child/tag/
-                                $category_path = $umaten_area;
-                            }
-
-                            $query->set('category_name', $category_path);
-                            $query->set('tag', $umaten_genre);
-                            $query->set('umaten_region', '');
-                            $query->set('umaten_area', '');
-                            $query->set('umaten_genre', '');
-
-                            if (defined('WP_DEBUG') && WP_DEBUG) {
-                                error_log("Umaten Toppage v2.10.1: Detected category+tag URL misidentified as widget vars. Converting umaten_region={$umaten_region}, umaten_area={$umaten_area}, umaten_genre={$umaten_genre} → category_name={$category_path}, tag={$umaten_genre} (Tag ID: {$tag->term_id}, Tag Name: '{$tag->name}')");
-                            }
-                            return;
-                        }
-                    }
                 }
+                // 【v2.10.9】投稿でもタグでもない場合は何もしない（既にタグチェックは上で実施済み）
             }
         }
 
