@@ -49,15 +49,16 @@ class Umaten_Toppage_Ajax_Handler {
         check_ajax_referer('umaten_toppage_nonce', 'nonce');
 
         $parent_slug = isset($_POST['parent_slug']) ? sanitize_text_field($_POST['parent_slug']) : '';
+        $is_region = isset($_POST['is_region']) && $_POST['is_region'] === '1'; // 【v2.10.17】地域選択フラグ
 
         if (empty($parent_slug)) {
             wp_send_json_error(array('message' => '親カテゴリが指定されていません。'));
             return;
         }
 
-        // 【v2.10.16】デバッグ：親カテゴリスラッグをログ出力
+        // 【v2.10.17】デバッグ：親カテゴリスラッグと地域フラグをログ出力
         if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log("Umaten Toppage v2.10.16: Searching for categories with parent_slug: {$parent_slug}");
+            error_log("Umaten Toppage v2.10.17: Searching for categories with parent_slug: {$parent_slug}, is_region: " . ($is_region ? 'true' : 'false'));
         }
 
         // 【v2.10.16】地域設定から該当地域のカテゴリリストを取得
@@ -65,14 +66,14 @@ class Umaten_Toppage_Ajax_Handler {
         $parent_name = '';
         $child_categories = array();
 
-        // 地域スラッグかどうかをチェック
-        if (isset($area_settings[$parent_slug]) && isset($area_settings[$parent_slug]['categories'])) {
+        // 【v2.10.17】地域選択の場合のみ地域設定をチェック（hokkaidoカテゴリとの混同を防ぐ）
+        if ($is_region && isset($area_settings[$parent_slug]) && isset($area_settings[$parent_slug]['categories'])) {
             // 地域ベースの場合：設定から都道府県カテゴリスラッグを取得
             $category_slugs = $area_settings[$parent_slug]['categories'];
             $parent_name = $area_settings[$parent_slug]['label'];
 
             if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log("Umaten Toppage v2.10.16: Region '{$parent_slug}' found with " . count($category_slugs) . " category slugs: " . implode(', ', $category_slugs));
+                error_log("Umaten Toppage v2.10.17: Region '{$parent_slug}' found with " . count($category_slugs) . " category slugs: " . implode(', ', $category_slugs));
             }
 
             // 各カテゴリスラッグからカテゴリ情報を取得
@@ -82,7 +83,7 @@ class Umaten_Toppage_Ajax_Handler {
                     $child_categories[] = $category;
                 } else {
                     if (defined('WP_DEBUG') && WP_DEBUG) {
-                        error_log("Umaten Toppage v2.10.16: Category '{$cat_slug}' not found in WordPress");
+                        error_log("Umaten Toppage v2.10.17: Category '{$cat_slug}' not found in WordPress");
                     }
                 }
             }
@@ -97,7 +98,7 @@ class Umaten_Toppage_Ajax_Handler {
                     $cat_slugs = array_map(function($cat) {
                         return $cat->slug;
                     }, $all_categories);
-                    error_log("Umaten Toppage v2.10.16: Parent category '{$parent_slug}' not found. Available category slugs: " . implode(', ', $cat_slugs));
+                    error_log("Umaten Toppage v2.10.17: Parent category '{$parent_slug}' not found. Available category slugs: " . implode(', ', $cat_slugs));
                 }
                 wp_send_json_error(array(
                     'message' => "親カテゴリ「{$parent_slug}」が見つかりません。WordPressでカテゴリを作成してください。"
@@ -106,7 +107,7 @@ class Umaten_Toppage_Ajax_Handler {
             }
 
             if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log("Umaten Toppage v2.10.16: Found parent category: {$parent_category->name} (ID: {$parent_category->term_id})");
+                error_log("Umaten Toppage v2.10.17: Found parent category: {$parent_category->name} (ID: {$parent_category->term_id})");
             }
 
             $parent_name = $parent_category->name;
@@ -122,12 +123,12 @@ class Umaten_Toppage_Ajax_Handler {
 
         // デバッグ：取得結果
         if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log("Umaten Toppage v2.10.16: Found " . count($child_categories) . " child categories for '{$parent_name}'");
+            error_log("Umaten Toppage v2.10.17: Found " . count($child_categories) . " child categories for '{$parent_name}'");
             if (!empty($child_categories)) {
                 $child_names = array_map(function($cat) {
                     return $cat->name . ' (' . $cat->slug . ')';
                 }, $child_categories);
-                error_log("Umaten Toppage v2.10.16: Child categories: " . implode(', ', $child_names));
+                error_log("Umaten Toppage v2.10.17: Child categories: " . implode(', ', $child_names));
             }
         }
 

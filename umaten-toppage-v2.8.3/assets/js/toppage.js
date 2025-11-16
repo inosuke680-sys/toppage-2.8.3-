@@ -61,7 +61,7 @@
                     console.log('[v2.10.16] さらに子カテゴリがあるため、次の階層を読み込みます');
                     self.closeModal('#child-category-modal');
                     setTimeout(function() {
-                        self.loadChildCategories(childSlug);
+                        self.loadChildCategories(childSlug, false); // 【v2.10.17】カテゴリ階層なのでfalse
                     }, 300);
                 } else {
                     console.log('[v2.10.16] 最終階層のため、ジャンル選択へ');
@@ -196,17 +196,20 @@
                 e.preventDefault();
                 console.log('親カテゴリがクリックされました');
                 const parentSlug = $(this).data('parent-slug');
-                self.loadChildCategories(parentSlug);
+                self.loadChildCategories(parentSlug, true); // 【v2.10.17】地域選択フラグを追加
             });
         },
 
         /**
          * 子カテゴリを読み込み
+         * @param {string} parentSlug - 親カテゴリまたは地域のスラッグ
+         * @param {boolean} isRegion - 地域選択かどうか（デフォルト: false）
          */
-        loadChildCategories: function(parentSlug) {
+        loadChildCategories: function(parentSlug, isRegion) {
             const self = this;
+            isRegion = isRegion || false; // 【v2.10.17】デフォルトはfalse
             self.currentParentSlug = parentSlug;
-            console.log('子カテゴリを読み込み中:', parentSlug);
+            console.log('子カテゴリを読み込み中:', parentSlug, 'isRegion:', isRegion);
 
             self.openModal('#child-category-modal');
 
@@ -223,7 +226,8 @@
                 data: {
                     action: 'umaten_get_child_categories',
                     nonce: umatenToppage.nonce,
-                    parent_slug: parentSlug
+                    parent_slug: parentSlug,
+                    is_region: isRegion ? '1' : '0' // 【v2.10.17】地域選択フラグを追加
                 },
                 success: function(response) {
                     console.log('子カテゴリ取得成功:', response);
