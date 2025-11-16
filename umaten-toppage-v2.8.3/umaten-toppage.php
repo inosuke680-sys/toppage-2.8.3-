@@ -211,9 +211,33 @@ class Umaten_Toppage_Plugin {
             )
         );
 
-        // 既存の設定がない場合のみデフォルト設定を保存
-        if (!get_option('umaten_toppage_area_settings')) {
+        // 【v2.10.16】既存設定を取得してマージ（categoriesキーを追加）
+        $existing_settings = get_option('umaten_toppage_area_settings', array());
+
+        if (empty($existing_settings)) {
+            // 設定が存在しない場合：新規作成
             update_option('umaten_toppage_area_settings', $default_settings);
+        } else {
+            // 設定が存在する場合：categoriesキーを追加（statusとlabelは既存を維持）
+            $updated = false;
+            foreach ($default_settings as $region_key => $default_data) {
+                if (isset($existing_settings[$region_key])) {
+                    // categoriesキーが存在しない場合のみ追加
+                    if (!isset($existing_settings[$region_key]['categories'])) {
+                        $existing_settings[$region_key]['categories'] = $default_data['categories'];
+                        $updated = true;
+                    }
+                } else {
+                    // 地域設定自体が存在しない場合は追加
+                    $existing_settings[$region_key] = $default_data;
+                    $updated = true;
+                }
+            }
+
+            // 更新があった場合のみ保存
+            if ($updated) {
+                update_option('umaten_toppage_area_settings', $existing_settings);
+            }
         }
 
         // リライトルールをフラッシュ
