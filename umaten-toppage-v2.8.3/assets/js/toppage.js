@@ -367,6 +367,18 @@
 
             // 各ジャンルを追加
             $.each(tags, function(index, tag) {
+                // 【v2.10.11 DEBUG】変数の状態を確認
+                console.log('[v2.10.11 DEBUG] Tag rendering - currentChildId:', self.currentChildId, 'tag.id:', tag.id, 'tag.name:', tag.name);
+                console.log('[v2.10.11 DEBUG] searchNonce:', umatenToppage.searchNonce);
+
+                // currentChildIdが未定義の場合はエラーを表示
+                if (!self.currentChildId) {
+                    console.error('[v2.10.11 ERROR] currentChildId is undefined! Cannot generate search URL.');
+                    console.error('[v2.10.11 ERROR] currentChildSlug:', self.currentChildSlug);
+                    console.error('[v2.10.11 ERROR] currentParentSlug:', self.currentParentSlug);
+                    return; // このタグをスキップ
+                }
+
                 // 【v2.10.11】検索ウィジェットURLを直接生成（rewrite rulesに依存しない確実な方法）
                 // umaten_category (子カテゴリID) + umaten_tag (タグID) で検索URLを構築
                 const searchUrl = umatenToppage.siteUrl + '/?umaten_category=' + self.currentChildId +
