@@ -5,7 +5,7 @@
      * Umaten トップページ JS
      */
     const UmatenToppage = {
-        version: '2.10.17',
+        version: '2.10.18',
         currentParentSlug: '',
         currentChildSlug: '',
         categoryStack: [], // 無限ループ防止用スタック
@@ -14,7 +14,7 @@
          * 初期化
          */
         init: function() {
-            console.log('[v2.10.17] Umaten Toppage initialized');
+            console.log('[v2.10.18] Umaten Toppage initialized');
             this.loadAreaSettings();
             this.bindEvents();
         },
@@ -52,11 +52,11 @@
                 const childSlug = $(this).data('child-slug');
                 const hasChildren = $(this).data('has-children');
 
-                console.log('[v2.10.17] 子カテゴリがクリックされました:', childSlug, 'hasChildren:', hasChildren);
+                console.log('[v2.10.18] 子カテゴリがクリックされました:', childSlug, 'hasChildren:', hasChildren, 'type:', typeof hasChildren);
 
-                // 無限ループ検出: 親と子が同じ場合
+                // 無限ループ検出: 親と子が同じ場合（北海道専用）
                 if (childSlug === self.currentParentSlug) {
-                    console.warn('[v2.10.17] 警告: 親カテゴリと子カテゴリが同じです。循環参照を検出しました。');
+                    console.warn('[v2.10.18] 警告: 親カテゴリと子カテゴリが同じです。循環参照を検出しました。');
                     self.currentChildSlug = childSlug;
                     self.closeModal('#child-category-modal');
                     setTimeout(function() {
@@ -67,7 +67,7 @@
 
                 // スタックに追加して循環参照をチェック
                 if (self.categoryStack.includes(childSlug)) {
-                    console.error('[v2.10.17] エラー: 無限ループを検出しました。カテゴリスタック:', self.categoryStack);
+                    console.error('[v2.10.18] エラー: 無限ループを検出しました。カテゴリスタック:', self.categoryStack);
                     alert('カテゴリの循環参照が検出されました。最初からやり直してください。');
                     self.categoryStack = [];
                     self.closeModal('#child-category-modal');
@@ -76,9 +76,10 @@
 
                 self.currentChildSlug = childSlug;
 
-                // hasChildrenがtrueの場合でも、スタックの深さをチェック
-                if (hasChildren && self.categoryStack.length < 3) {
-                    console.log('[v2.10.17] さらに子カテゴリがあるため、次の階層を読み込みます');
+                // hasChildrenが明示的にtrueの場合のみ、次の階層を読み込む
+                // 東北→青森などの通常ケースでは hasChildren は false なので、直接タグ選択へ
+                if (hasChildren === true && self.categoryStack.length < 3) {
+                    console.log('[v2.10.18] さらに子カテゴリがあるため、次の階層を読み込みます');
                     self.categoryStack.push(childSlug);
                     self.closeModal('#child-category-modal');
                     setTimeout(function() {
@@ -87,8 +88,9 @@
                 } else {
                     // hasChildrenがfalseまたはスタックが深すぎる場合はタグを読み込む
                     if (self.categoryStack.length >= 3) {
-                        console.warn('[v2.10.17] カテゴリ階層が深すぎます。タグ選択に進みます。');
+                        console.warn('[v2.10.18] カテゴリ階層が深すぎます。タグ選択に進みます。');
                     }
+                    console.log('[v2.10.18] ジャンル選択に進みます');
                     self.closeModal('#child-category-modal');
                     setTimeout(function() {
                         self.loadTags();
@@ -218,7 +220,7 @@
             // 親カテゴリカードクリックイベント
             $(document).on('click', '.parent-category-card', function(e) {
                 e.preventDefault();
-                console.log('[v2.10.17] 親カテゴリがクリックされました');
+                console.log('[v2.10.18] 親カテゴリがクリックされました');
                 const parentSlug = $(this).data('parent-slug');
                 // 新しい親カテゴリをクリックしたらスタックをリセット
                 self.categoryStack = [];
@@ -232,7 +234,7 @@
         loadChildCategories: function(parentSlug) {
             const self = this;
             self.currentParentSlug = parentSlug;
-            console.log('[v2.10.17] 子カテゴリを読み込み中:', parentSlug);
+            console.log('[v2.10.18] 子カテゴリを読み込み中:', parentSlug);
 
             self.openModal('#child-category-modal');
 
@@ -252,7 +254,7 @@
                     parent_slug: parentSlug
                 },
                 success: function(response) {
-                    console.log('[v2.10.17] 子カテゴリ取得成功:', response);
+                    console.log('[v2.10.18] 子カテゴリ取得成功:', response);
                     if (response.success) {
                         const categories = response.data.categories;
                         const parentName = response.data.parent_name;
@@ -322,7 +324,7 @@
                 $grid.append($item);
             });
 
-            console.log('[v2.10.17] 子カテゴリを', categories.length, '件レンダリングしました');
+            console.log('[v2.10.18] 子カテゴリを', categories.length, '件レンダリングしました');
         },
 
         /**
@@ -330,7 +332,7 @@
          */
         loadTags: function() {
             const self = this;
-            console.log('[v2.10.17] タグを読み込み中');
+            console.log('[v2.10.18] タグを読み込み中');
 
             self.openModal('#tag-modal');
 
@@ -349,7 +351,7 @@
                     nonce: umatenToppage.nonce
                 },
                 success: function(response) {
-                    console.log('[v2.10.17] タグ取得成功:', response);
+                    console.log('[v2.10.18] タグ取得成功:', response);
                     if (response.success) {
                         const tags = response.data.tags;
                         $('#tag-modal-title').text('ジャンルを選択');
@@ -386,7 +388,7 @@
             $grid.empty();
 
             // デバッグログ
-            console.log('[v2.10.17] renderTags called - Parent:', self.currentParentSlug, ', Child:', self.currentChildSlug, ', Tags:', tags.length);
+            console.log('[v2.10.18] renderTags called - Parent:', self.currentParentSlug, ', Child:', self.currentChildSlug, ', Tags:', tags.length);
 
             if (tags.length === 0) {
                 $grid.html(`
@@ -399,9 +401,9 @@
                 return;
             }
 
-            // 【v2.10.17修正】currentParentSlugとcurrentChildSlugの検証
+            // 【v2.10.18修正】currentParentSlugとcurrentChildSlugの検証
             if (!self.currentParentSlug || !self.currentChildSlug) {
-                console.error('[v2.10.17] ERROR: currentParentSlug or currentChildSlug is empty!');
+                console.error('[v2.10.18] ERROR: currentParentSlug or currentChildSlug is empty!');
                 $grid.html(`
                     <div class="meshimap-coming-soon">
                         <div class="meshimap-coming-soon-icon">&#9888;</div>
@@ -414,7 +416,7 @@
 
             // 「すべてのジャンル」ボタンを最初に追加
             const allGenresUrl = umatenToppage.siteUrl + '/' + self.currentParentSlug + '/' + self.currentChildSlug + '/';
-            console.log('[v2.10.17] All genres URL:', allGenresUrl);
+            console.log('[v2.10.18] All genres URL:', allGenresUrl);
 
             const $allGenresItem = $('<a>')
                 .attr('href', allGenresUrl)
@@ -424,7 +426,7 @@
                 .attr('data-full-url', allGenresUrl);
 
             $allGenresItem.on('click', function(e) {
-                console.log('[v2.10.17] すべてのジャンルクリック - URL:', allGenresUrl);
+                console.log('[v2.10.18] すべてのジャンルクリック - URL:', allGenresUrl);
                 // デフォルトのリンク動作を許可（href属性で遷移）
                 // e.preventDefault()は削除
             });
@@ -433,9 +435,9 @@
 
             // 各ジャンルを追加
             $.each(tags, function(index, tag) {
-                // 【v2.10.17修正】実際のURLを生成してhref属性に設定
+                // 【v2.10.18修正】実際のURLを生成してhref属性に設定
                 const tagUrl = umatenToppage.siteUrl + '/' + self.currentParentSlug + '/' + self.currentChildSlug + '/' + tag.slug + '/';
-                console.log('[v2.10.17] Tag URL generated:', tag.name, '->', tagUrl);
+                console.log('[v2.10.18] Tag URL generated:', tag.name, '->', tagUrl);
 
                 const $tagItem = $('<a>')
                     .attr('href', tagUrl)
@@ -445,7 +447,7 @@
                     .attr('data-full-url', tagUrl);
 
                 $tagItem.on('click', function(e) {
-                    console.log('[v2.10.17] タグクリック:', tag.name, ', URL:', tagUrl);
+                    console.log('[v2.10.18] タグクリック:', tag.name, ', URL:', tagUrl);
                     // デフォルトのリンク動作を許可（href属性で遷移）
                     // e.preventDefault()は削除
                 });
@@ -453,7 +455,7 @@
                 $grid.append($tagItem);
             });
 
-            console.log('[v2.10.17] タグを', tags.length, '件レンダリングしました（すべてのジャンルを含む）');
+            console.log('[v2.10.18] タグを', tags.length, '件レンダリングしました（すべてのジャンルを含む）');
         },
 
         /**
@@ -467,7 +469,7 @@
                              self.currentChildSlug + '/' +
                              tagSlug + '/';
 
-            console.log('[v2.10.17] 最終URLに遷移:', finalUrl);
+            console.log('[v2.10.18] 最終URLに遷移:', finalUrl);
             window.location.href = finalUrl;
         },
 
@@ -475,7 +477,7 @@
          * モーダルを開く
          */
         openModal: function(modalId) {
-            console.log('[v2.10.17] モーダルを開く:', modalId);
+            console.log('[v2.10.18] モーダルを開く:', modalId);
             $(modalId).addClass('active').css('display', 'flex');
             $('body').css('overflow', 'hidden');
         },
@@ -484,7 +486,7 @@
          * モーダルを閉じる
          */
         closeModal: function(modalId) {
-            console.log('[v2.10.17] モーダルを閉じる:', modalId);
+            console.log('[v2.10.18] モーダルを閉じる:', modalId);
             $(modalId).removeClass('active').css('display', 'none');
             $('body').css('overflow', 'auto');
         }

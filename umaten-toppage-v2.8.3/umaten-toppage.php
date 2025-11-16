@@ -2,8 +2,8 @@
 /**
  * Plugin Name: Umaten トップページ
  * Plugin URI: https://umaten.jp
- * Description: 動的なカテゴリ・タグ表示を備えたトップページ用プラグイン。全エリア対応の3ステップナビゲーション（親→子カテゴリ→ジャンル）。SEO最適化・URLリライト完全修正（タグ・投稿判定改善）・ヒーロー画像メタデータ保存（SWELLテーマ完全対応）。検索結果ページ対応（モダンUI）。独自アクセスカウント機能搭載。投稿とタグの完全な区別。デバッグログ強化・エラーハンドリング改善。v2.10.17: 北海道カテゴリ無限ループ修正・循環参照検出機能追加。
- * Version: 2.10.17
+ * Description: 動的なカテゴリ・タグ表示を備えたトップページ用プラグイン。全エリア対応の3ステップナビゲーション（親→子カテゴリ→ジャンル）。SEO最適化・URLリライト完全修正（タグ・投稿判定改善）・ヒーロー画像メタデータ保存（SWELLテーマ完全対応）。検索結果ページ対応（モダンUI）。独自アクセスカウント機能搭載。投稿とタグの完全な区別。デバッグログ強化・エラーハンドリング改善。v2.10.18: hasChildren厳密判定により東北・関東等の正常動作を修復。
+ * Version: 2.10.18
  * Author: Umaten
  * Author URI: https://umaten.jp
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // プラグインの定数定義
-define('UMATEN_TOPPAGE_VERSION', '2.10.17');
+define('UMATEN_TOPPAGE_VERSION', '2.10.18');
 define('UMATEN_TOPPAGE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('UMATEN_TOPPAGE_PLUGIN_URL', plugin_dir_url(__FILE__));
 
