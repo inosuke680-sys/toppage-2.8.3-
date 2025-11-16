@@ -364,9 +364,9 @@
 
             // 各ジャンルを追加
             $.each(tags, function(index, tag) {
-                // 【v2.9.0】実際のURLを生成してhref属性に設定
-                const tagUrl = umatenToppage.siteUrl + '/' + self.currentParentSlug + '/' + self.currentChildSlug + '/' + tag.slug + '/';
-                console.log('[v2.9.0] Tag URL generated:', tag.name, '->', tagUrl);
+                // 【v2.10.6】トレーリングスラッシュなしのURLを生成（v2.10.4のリンク書き換えと整合性を保つ）
+                const tagUrl = umatenToppage.siteUrl + '/' + self.currentParentSlug + '/' + self.currentChildSlug + '/' + tag.slug;
+                console.log('[v2.10.6] Tag URL generated (no trailing slash):', tag.name, '->', tagUrl);
 
                 const $tagItem = $('<a>')
                     .attr('href', tagUrl)
