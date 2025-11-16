@@ -117,19 +117,24 @@ class Umaten_Toppage_URL_Rewrite {
             $umaten_area = $query->get('umaten_area');
             $umaten_genre = $query->get('umaten_genre');
 
-            // 【v2.10.2 緊急修正】/hokkaido/hakodate/ramen/ を直接処理
-            // この特定のURLだけ確実に動作させるためのハードコード
+            // 【v2.10.3 修正】/hokkaido/hakodate/ramen/ を検索ウィジェットURLにリダイレクト
+            // ユーザーの要望: このURLを /?umaten_category=10&umaten_tag=426&umaten_search=1 にリダイレクト
             if ($umaten_region === 'hokkaido' && $umaten_area === 'hakodate' && $umaten_genre === 'ramen') {
-                $query->set('category_name', 'hakodate');
-                $query->set('tag', 'ramen');
-                $query->set('umaten_region', '');
-                $query->set('umaten_area', '');
-                $query->set('umaten_genre', '');
+                // カテゴリとタグのIDを動的に取得（より安全）
+                $hakodate_cat = get_term_by('slug', 'hakodate', 'category');
+                $ramen_tag = get_term_by('slug', 'ramen', 'post_tag');
 
-                if (defined('WP_DEBUG') && WP_DEBUG) {
-                    error_log("Umaten Toppage v2.10.2: Hardcoded fix for /hokkaido/hakodate/ramen/ → category_name=hakodate, tag=ramen");
+                if ($hakodate_cat && $ramen_tag) {
+                    // 検索ウィジェットのURLにリダイレクト
+                    $redirect_url = home_url('/?umaten_category=' . $hakodate_cat->term_id . '&umaten_tag=' . $ramen_tag->term_id . '&umaten_search=1');
+
+                    if (defined('WP_DEBUG') && WP_DEBUG) {
+                        error_log("Umaten Toppage v2.10.3: Redirecting /hokkaido/hakodate/ramen/ to search widget URL: {$redirect_url}");
+                    }
+
+                    wp_redirect($redirect_url, 301);
+                    exit;
                 }
-                return;
             }
 
             // 2セグメントURL: /region/area/ または /category/post-slug/
