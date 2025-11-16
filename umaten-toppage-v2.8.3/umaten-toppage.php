@@ -2,8 +2,8 @@
 /**
  * Plugin Name: Umaten トップページ
  * Plugin URI: https://umaten.jp
- * Description: 動的なカテゴリ・タグ表示を備えたトップページ用プラグイン。全エリア対応の3ステップナビゲーション（親→子カテゴリ→ジャンル）。SEO最適化・URLリライト完全修正（タグ・投稿判定改善）・ヒーロー画像メタデータ保存（SWELLテーマ完全対応）。検索結果ページ対応（モダンUI）。独自アクセスカウント機能搭載。投稿とタグの完全な区別。デバッグログ強化・エラーハンドリング改善。v2.10.11：モーダルで検索URL直接生成（rewrite rules不要）。確実にすべてのジャンル対応。
- * Version: 2.10.13
+ * Description: 動的なカテゴリ・タグ表示を備えたトップページ用プラグイン。全エリア対応の3ステップナビゲーション（親→子カテゴリ→ジャンル）。SEO最適化・URLリライト完全修正（タグ・投稿判定改善）・ヒーロー画像メタデータ保存（SWELLテーマ完全対応）。検索結果ページ対応（モダンUI）。独自アクセスカウント機能搭載。投稿とタグの完全な区別。デバッグログ強化・エラーハンドリング改善。v2.10.14：全地域（北海道、東北、関東、中部、関西、中国、四国、九州・沖縄）をデフォルトで公開状態に。確実にすべての地域対応。
+ * Version: 2.10.14
  * Author: Umaten
  * Author URI: https://umaten.jp
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // プラグインの定数定義
-define('UMATEN_TOPPAGE_VERSION', '2.10.13');
+define('UMATEN_TOPPAGE_VERSION', '2.10.14');
 define('UMATEN_TOPPAGE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('UMATEN_TOPPAGE_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -167,45 +167,60 @@ class Umaten_Toppage_Plugin {
      * プラグイン有効化時の処理
      */
     public function activate() {
-        // デフォルト設定の作成
+        // 【v2.10.14】デフォルト設定の作成 - 全地域を公開状態に
         $default_settings = array(
             'hokkaido' => array(
                 'status' => 'published',
                 'label' => '北海道'
             ),
             'tohoku' => array(
-                'status' => 'coming_soon',
+                'status' => 'published',  // 【v2.10.14】coming_soon → published
                 'label' => '東北'
             ),
             'kanto' => array(
-                'status' => 'coming_soon',
+                'status' => 'published',  // 【v2.10.14】coming_soon → published
                 'label' => '関東'
             ),
             'chubu' => array(
-                'status' => 'coming_soon',
+                'status' => 'published',  // 【v2.10.14】coming_soon → published
                 'label' => '中部'
             ),
             'kansai' => array(
-                'status' => 'coming_soon',
+                'status' => 'published',  // 【v2.10.14】coming_soon → published
                 'label' => '関西'
             ),
             'chugoku' => array(
-                'status' => 'coming_soon',
+                'status' => 'published',  // 【v2.10.14】coming_soon → published
                 'label' => '中国'
             ),
             'shikoku' => array(
-                'status' => 'coming_soon',
+                'status' => 'published',  // 【v2.10.14】coming_soon → published
                 'label' => '四国'
             ),
             'kyushu-okinawa' => array(
-                'status' => 'coming_soon',
+                'status' => 'published',  // 【v2.10.14】coming_soon → published
                 'label' => '九州・沖縄'
             )
         );
 
-        // 既存の設定がない場合のみデフォルト設定を保存
-        if (!get_option('umaten_toppage_area_settings')) {
+        // 【v2.10.14】既存の設定を取得して更新
+        $existing_settings = get_option('umaten_toppage_area_settings', array());
+
+        if (empty($existing_settings)) {
+            // 設定がない場合：デフォルト設定を保存
             update_option('umaten_toppage_area_settings', $default_settings);
+        } else {
+            // 【v2.10.14】既存設定がある場合：すべての地域を'published'に更新
+            foreach ($default_settings as $area_key => $area_data) {
+                if (isset($existing_settings[$area_key])) {
+                    // 既存設定を'published'に更新（ラベルは保持）
+                    $existing_settings[$area_key]['status'] = 'published';
+                } else {
+                    // 設定がないエリアはデフォルト値を設定
+                    $existing_settings[$area_key] = $area_data;
+                }
+            }
+            update_option('umaten_toppage_area_settings', $existing_settings);
         }
 
         // リライトルールをフラッシュ
